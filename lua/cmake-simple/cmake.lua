@@ -6,7 +6,7 @@ local cmake = {}
 
 function cmake:new(log_filename)
 
-  o = o or {
+  local o = {
     cwd = ".",
     build_folder = "build",
     jobs = 2,
@@ -18,6 +18,7 @@ function cmake:new(log_filename)
   }
   setmetatable(o, self)
   self.__index = self
+
   return o
 end
 
@@ -51,7 +52,7 @@ function cmake:configure_from_preset()
   local cmd = command:new(self.log_filename)
   local preset_name = self:get_preset("configure")
   local args = {"--preset", preset_name}
-  cmd:execute(args, "Configure using preset " .. preset_name, function(status) self.running = false; end)
+  cmd:execute(args, "Configure using preset " .. preset_name, function(_) self.running = false; end)
 end
 
 function cmake:configure()
@@ -124,7 +125,7 @@ function cmake:clean()
 end
 
 function cmake:show_log()
-  local buf, win = utils.create_window()
+  local _, _ = utils.create_window()
   vim.api.nvim_command("$read" .. self.log_filename)
 
 end
