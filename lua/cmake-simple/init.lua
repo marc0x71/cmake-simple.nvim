@@ -40,10 +40,16 @@ local function _init()
     bang = true,
     desc = "CMake show last log"
   })
+
+  vim.api.nvim_create_user_command("CTestCases", function() require('cmake-simple').testcases() end, { -- opts
+    nargs = "*",
+    bang = true,
+    desc = "CTest show testcases"
+  })
 end
 
 local log_filename = os.tmpname()
-local M = {instance = nil}
+local M = {cmake_instance = nil, ctest_instance = nil}
 
 M.setup = function(opts) print("Options: ", opts) end
 
@@ -53,39 +59,49 @@ M.initialize = function()
 
   notification.notify("CMakeLists.txt found in " .. cwd, vim.log.levels.INFO)
 
-  M.instance = require('cmake-simple.cmake'):new(log_filename)
-  M.instance:load_presets()
+  M.cmake_instance = require('cmake-simple.cmake'):new(log_filename)
+  M.cmake_instance:load_presets()
+  M.ctest_instance = require('cmake-simple.ctest'):new()
+  M.ctest_instance:load_presets()
 end
 
 M.configure = function()
-  if (M.instance == nil) then
+  if (M.cmake_instance == nil) then
     notification.notify("Initialization not completed", vim.log.levels.ERROR)
   else
-    M.instance:configure()
+    M.cmake_instance:configure()
   end
 end
 
 M.build = function()
-  if (M.instance == nil) then
+  if (M.cmake_instance == nil) then
     notification.notify("Initialization not completed", vim.log.levels.ERROR)
   else
-    M.instance:build()
+    M.cmake_instance:build()
   end
 end
 
 M.clean = function()
-  if (M.instance == nil) then
+  if (M.cmake_instance == nil) then
     notification.notify("Initialization not completed", vim.log.levels.ERROR)
   else
-    M.instance:clean()
+    M.cmake_instance:clean()
   end
 end
 
 M.show_log = function()
-  if (M.instance == nil) then
+  if (M.cmake_instance == nil) then
     notification.notify("Initialization not completed", vim.log.levels.ERROR)
   else
-    M.instance:show_log()
+    M.cmake_instance:show_log()
+  end
+end
+
+M.testcases = function() 
+  if (M.ctest_instance == nil) then
+    notification.notify("Initialization not completed", vim.log.levels.ERROR)
+  else
+    M.ctest_instance:show_testcases()
   end
 end
 

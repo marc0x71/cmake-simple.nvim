@@ -11,6 +11,21 @@ end
 local M = {
   file_exists = function(name) return _file_exists(name) end,
 
+  get_path = function(path, sep)
+    sep = sep or '/'
+    return path:match("(.*" .. sep .. ")")
+  end,
+
+  read_all = function(filename)
+    local f = io.open(filename, "r")
+    if f == nil then
+      return nil
+    end
+    local content = f:read("*a")
+    f:close()
+    return content
+  end,
+
   create_window = function()
     local buf = vim.api.nvim_create_buf(false, true)
 
