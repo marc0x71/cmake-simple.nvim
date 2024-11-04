@@ -68,7 +68,16 @@ local M = {
     end
     vim.api.nvim_buf_add_highlight(buf, -1, highlight, row - 1, 0, content:len())
     return row
-  end
+  end,
+
+  trim = function(s)
+    if s == nil then return "" end
+    return (s:gsub("^%s*(.-)%s*$", "%1"))
+  end,
+
+  starts_with = function(s, start) return s:sub(1, #start) == start end,
+
+  ends_with = function(s, ending) return ending == "" or s:sub(-#ending) == ending end
 
 }
 

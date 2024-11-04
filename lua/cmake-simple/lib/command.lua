@@ -44,7 +44,7 @@ function command:execute(args, action, on_terminate)
   local ntf_listener = notification_listener:new(action)
   local wrt_listener = writer_listener:new(self.log_filename)
 
-  local full_command = self.command .. table.concat(args, " ")
+  local full_command = self.command .. " " .. table.concat(args, " ")
   win_listener:update("start", full_command)
   ntf_listener:update("start", full_command)
   wrt_listener:update("start", full_command)
