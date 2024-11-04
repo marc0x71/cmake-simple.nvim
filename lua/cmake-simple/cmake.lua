@@ -1,6 +1,6 @@
 local command = require("cmake-simple.lib.command")
 local notification = require('cmake-simple.lib.notification')
-local utils = require('cmake-simple.lib.utils')
+local window = require('cmake-simple.lib.window')
 
 local cmake = {}
 
@@ -125,9 +125,8 @@ function cmake:clean()
 end
 
 function cmake:show_log()
-  local _, _ = utils.create_window()
+  local _, _ = window.centered_window()
   vim.api.nvim_command("$read" .. self.log_filename)
-
 end
 
 return cmake

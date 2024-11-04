@@ -1,10 +1,11 @@
 local listener = require('cmake-simple.lib.listener.init')
 local utils = require('cmake-simple.lib.utils')
+local window = require('cmake-simple.lib.window')
 
 local window_listener = listener:new()
 
 function window_listener:new(action)
-  local buf, win = utils.create_window()
+  local buf, win = window.centered_window()
   local o = {action = action, win = win, buf = buf}
   setmetatable(o, self)
   self.__index = self
