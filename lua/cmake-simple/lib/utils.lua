@@ -18,9 +18,7 @@ local M = {
 
   read_all = function(filename)
     local f = io.open(filename, "r")
-    if f == nil then
-      return nil
-    end
+    if f == nil then return nil end
     local content = f:read("*a")
     f:close()
     return content
@@ -51,6 +49,11 @@ local M = {
     }
 
     local win = vim.api.nvim_open_win(buf, true, opts)
+
+    -- press 'q' or 'esc' to clone window
+    for _, key in ipairs({'q', '<esc>'}) do
+      vim.api.nvim_buf_set_keymap(buf, 'n', key, '<cmd>close<cr>', {nowait = true, noremap = true, silent = true})
+    end
     return buf, win
   end,
 
