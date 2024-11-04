@@ -101,7 +101,7 @@ M.testcases = function()
   if (M.ctest_instance == nil) then
     notification.notify("Initialization not completed", vim.log.levels.ERROR)
   else
-    M.ctest_instance:show_testcases()
+    M.ctest_instance:testcases()
   end
 end
 

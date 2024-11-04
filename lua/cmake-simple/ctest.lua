@@ -1,6 +1,6 @@
 local utils = require('cmake-simple.lib.utils')
 local ntf = require('cmake-simple.lib.notification')
-
+local ts_helper = require('cmake-simple.lib.ts_helper')
 local scandir = require("plenary.scandir")
 
 local ctest = {}
@@ -44,14 +44,14 @@ local function _decode_testlist(json)
         break
       end
     end
-    result[test.name] = {source = '', line = 0, command = test.command, cwd = cwd, status = 'unk', output = nil}
+    result[test.name] = {command = test.command, cwd = cwd, status = 'unk', output = nil}
   end
   return result
 end
 
-function ctest:show_testcases()
+function ctest:testcases()
   self:search_test_folders()
-  if self.test_dir==nil or next(self.test_folders)==nil then
+  if self.test_dir == nil or next(self.test_folders) == nil then
     -- something went wrong
     return
   end
@@ -71,18 +71,40 @@ function ctest:show_testcases()
     self.test_list = _decode_testlist(json)
     if next(self.test_list) ~= nil then self:search_test_files() end
   end
-  if result.code~=0 or next(self.test_list) == nil then
+  if result.code ~= 0 or next(self.test_list) == nil then
     ntf.notify("Failed to locate retrieve test list", vim.log.levels.ERROR)
     return
   end
 
-  P(self)
+end
 
+function ctest:_show_testcases()
   -- TODO show testcases window
 end
 
 function ctest:search_test_files()
-  -- TODO
+  local files = {}
+  local count = vim.tbl_count(self.test_folders)
+  for _, folder in ipairs(self.test_folders) do
+    scandir.scan_dir_async(folder, {
+      respect_gitignore = true,
+      silent = true,
+      search_pattern = {".*.C$", ".*.cxx$", ".*.cc$", ".*.cpp$", ".*.c++$"},
+      on_insert = function(filename)
+        local local_tests = ts_helper.extract_test_details(filename)
+        files = vim.tbl_extend('keep', files, local_tests)
+      end,
+      on_exit = function()
+        count = count - 1
+        for k, v in pairs(files) do
+          if self.test_list[k] ~= nil then self.test_list[k] = vim.tbl_extend('keep', self.test_list[k], v) end
+        end
+        if count <= 0 then
+          self:_show_testcases()
+        end
+      end
+    })
+  end
 end
 
 function ctest:search_test_folders()
@@ -104,8 +126,17 @@ function ctest:search_test_folders()
 
   for _, filename in ipairs(folders) do
     local content = utils.read_all(filename) or ''
-    local start = string.match(content, [[.*Source directory: ([^%s]+).*]], 0)
-    if start ~= nil then vim.list_extend(self.test_folders, {start}) end
+    local source_dir = string.match(content, [[.*Source directory: ([^%s]+).*]], 0)
+    if source_dir ~= nil then
+      local found = false
+      for _, s in ipairs(self.test_folders) do
+        if utils.starts_with(source_dir, s) then
+          found = true
+          break
+        end
+      end
+      if not found then table.insert(self.test_folders, source_dir) end
+    end
   end
   if next(self.test_folders) == nil then ntf.notify("Failed to locate tests folders", vim.log.levels.WARN) end
 end
