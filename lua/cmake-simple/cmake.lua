@@ -49,7 +49,7 @@ function cmake:get_preset(name)
 end
 
 function cmake:configure_from_preset()
-  local cmd = command:new(self.log_filename)
+  local cmd = command:new({log_filename = self.log_filename})
   local preset_name = self:get_preset("configure")
   local args = {"--preset", preset_name}
   cmd:execute(args, "Configure using preset " .. preset_name, function(_) self.running = false; end)
@@ -65,13 +65,13 @@ function cmake:configure()
     self:configure_from_preset()
     return
   end
-  local cmd = command:new(self.log_filename)
+  local cmd = command:new({log_filename = self.log_filename})
   local args = {"-S", self.cwd, "-B", self.build_folder}
   cmd:execute(args, "Configure", function(_) self.running = false; end)
 end
 
 function cmake:build_from_preset()
-  local cmd = command:new(self.log_filename)
+  local cmd = command:new({log_filename = self.log_filename})
   local preset_name = self:get_preset("build")
   local args = {"--build", "--preset", preset_name}
   if self.clean_first then args = vim.list_extend(args, {'--clean-first'}) end
@@ -95,14 +95,14 @@ function cmake:build()
   local args = {"--build", self.build_folder}
   if self.clean_first then args = vim.list_extend(args, {'--clean-first'}) end
   if self.jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.jobs)}) end
-  local cmd = command:new(self.log_filename)
+  local cmd = command:new({log_filename = self.log_filename})
   cmd:execute(args, "Build", function(_) self.running = false; end)
 end
 
 function cmake:clean_from_preset()
   local preset_name = self:get_preset("build")
   local args = {"--build", "--preset", preset_name, "--target", "clean"}
-  local cmd = command:new(self.log_filename)
+  local cmd = command:new({log_filename = self.log_filename})
   cmd:execute(args, "Clean using preset " .. preset_name, function(_) self.running = false; end)
 end
 
@@ -120,7 +120,7 @@ function cmake:clean()
   end
 
   local args = {"--build", self.build_folder, "--target", "clean"}
-  local cmd = command:new(self.log_filename)
+  local cmd = command:new({log_filename = self.log_filename})
   cmd:execute(args, "Clean", function(_) self.running = false; end)
 end
 

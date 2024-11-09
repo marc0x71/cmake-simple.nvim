@@ -3,28 +3,30 @@ local ntf = require('cmake-simple.lib.notification')
 local ts_helper = require('cmake-simple.lib.ts_helper')
 local scandir = require("plenary.scandir")
 local window = require("cmake-simple.lib.window")
+local command = require("cmake-simple.lib.command")
+local xml_parser = require('cmake-simple.lib.xml_parser')
 
 local icons = {ok = "✓", running = "⌛", failed = "✗", skipped = "⚐", unknown = "⯑"}
 local ctest = {}
 
 function ctest:new(o)
-  o = o or
-          {
-        preset_list = {},
-        selected_preset = nil,
-        test_dir = nil,
-        test_list = {},
-        test_folders = {},
-        testcases_buf = nil
-      }
+  local log_filename = os.tmpname()
+  o = o or {
+    preset_list = {},
+    selected_preset = nil,
+    test_dir = nil,
+    test_list = {},
+    test_folders = {},
+    testcases_buf = nil,
+    summary = nil,
+    job = 2,
+    log_filename = log_filename,
+    running = false
+  }
   setmetatable(o, self)
   self.__index = self
   return o
 end
-
---[[
-ctest --quiet --output-on-failure --output-junit /tmp/nvim.marco/uxQ42Y/0 --output-log /tmp/nvim.marco/uxQ42Y/1 --preset test-debug
-]] --
 
 function ctest:load_presets()
   self.presets = {}
@@ -113,6 +115,7 @@ function ctest:search_test_folders()
   self.test_folders = {}
   self.test_dir = nil
 
+  ---@diagnostic disable-next-line: undefined-field
   local cwd = vim.loop.cwd()
   local folders = scandir.scan_dir(cwd, {
     respect_gitignore = false,
@@ -147,9 +150,7 @@ function ctest:_get_selected()
   local r, _ = unpack(vim.api.nvim_win_get_cursor(0))
   local row = r - 2;
   if row < 0 then return nil end
-  for k, v in utils.idict(self.test_list) do
-    if k == row then return v, self.test_list[v] end
-  end
+  for k, v in utils.idict(self.test_list) do if k == row then return v, self.test_list[v] end end
   return nil
 end
 
@@ -157,8 +158,6 @@ function ctest:goto_test()
   local name, detail = self:_get_selected()
   if name == nil or detail == nil then return end
   if detail["filename"] ~= nil then
-    print(self.main_window)
-    print(vim.api.nvim_win_is_valid(self.main_window))
     if not vim.api.nvim_win_is_valid(self.main_window) then
       ntf.notify("Main window has been close, please try again")
       pcall(vim.api.nvim_win_close, 0, true)
@@ -172,7 +171,27 @@ end
 
 function ctest:run_all_test()
   -- TODO
-  ntf.notify("Running all test")
+  --[[
+ctest --quiet --output-on-failure --output-junit /tmp/nvim.marco/uxQ42Y/0 --output-log /tmp/nvim.marco/uxQ42Y/1 --preset test-debug
+]] --
+  if self.running then
+    ntf.notify("CTest already running", "warn")
+    return
+  end
+  self.running = true
+
+  local result_filename = os.tmpname()
+
+  local cmd = command:new({name = "CTest", command = "ctest", log_filename = self.log_filename})
+  local args = {"--output-on-failure", "--output-junit", result_filename}
+
+  if self.selected_preset ~= nil then vim.list_extend(args, {'--preset', self.selected_preset}) end
+
+  cmd:execute(args, "Running all tests", function(_)
+    self.running = false;
+    self:update_testlist(result_filename)
+  end)
+
 end
 
 function ctest:run_test(name, detail)
@@ -213,21 +232,61 @@ end
 
 function ctest:update_testcases()
   self:_create_win_testcases()
-  utils.buf_append_colorized(self.testcases_buf, "Testcases", "start")
   vim.api.nvim_buf_set_lines(self.testcases_buf, 0, -1, true, {"Testcases", ""})
+  vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "Title", 0, 0, 100)
   for k, v in pairs(self.test_list) do
     local icon = icons.unknown
     if v["status"] == "run" then
       icon = icons.ok
     elseif v["status"] == "running" then
       icon = icons.running
-    elseif v["status"] == "failed" then
+    elseif v["status"] == "fail" then
       icon = icons.failed
     elseif v["status"] == "skipped" then
       icon = icons.skipped
     end
-    utils.buf_append_colorized(self.testcases_buf, icon .. " " .. k, "")
+    utils.buf_append_colorized(self.testcases_buf, icon .. " " .. k, v["status"])
   end
+  if self.summary ~= nil then
+    local success = tonumber(self.summary["tests"]) - tonumber(self.summary["disabled"]) -
+                        tonumber(self.summary["failures"]) - tonumber(self.summary["skipped"])
+
+    vim.api.nvim_buf_set_lines(self.testcases_buf, -1, -1, true, {
+      "", "   " .. icons.ok .. " " .. tostring(success) .. " " .. icons.failed .. " " .. self.summary["failures"],
+      "   " .. icons.skipped .. " " .. self.summary["skipped"] .. " " .. icons.unknown .. " " .. self.summary["disabled"]
+    })
+  end
+
+end
+
+function ctest:update_testlist(result_filename)
+
+  local file = io.open(result_filename, "rb")
+  if file ~= nil then
+    local str = file:read("*all")
+    local xml = xml_parser(str)
+    self.summary = xml[1]["attrs"]
+    local testcases = xml[1]["children"]
+    for _, testcase in pairs(testcases) do
+      local name = testcase["attrs"]["name"]
+      local classname = testcase["attrs"]["classname"]
+      local status = testcase["attrs"]["status"]
+      local output = ""
+      for _, child in pairs(testcase["children"]) do
+        if child["name"] == "system-out" then
+          output = child["content"]
+          break
+        end
+      end
+      if self.test_list[name] ~= nil then
+        self.test_list[name]["status"] = status
+        self.test_list[name]["output"] = output
+      else
+        ntf.notify("Test " .. name .. " not found", vim.log.levels.WARN)
+      end
+    end
+  end
+  self:update_testcases()
 end
 
 return ctest

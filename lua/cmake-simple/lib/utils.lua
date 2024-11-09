@@ -28,8 +28,12 @@ local M = {
     vim.api.nvim_buf_set_lines(buf, -1, -1, true, {content})
     local row = vim.api.nvim_buf_line_count(buf)
     local highlight = 'Normal'
-    if content_type == "err" then
-      highlight = 'ErrorMsg'
+    if content_type == "err" or content_type == "fail" then
+      highlight = 'DiagnosticError'
+    elseif content_type == "skipped" then
+      highlight = 'DiagnosticInfo'
+    elseif content_type == "run" then
+      highlight = 'DiagnosticOk'
     elseif content_type == "start" or content_type == "end" then
       highlight = 'Title'
     end

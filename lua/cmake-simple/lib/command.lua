@@ -5,13 +5,13 @@ local writer_listener = require('cmake-simple.lib.listener.writer_listener')
 
 local command = {}
 
-function command:new(tmpname)
+function command:new(ops)
   local o = {
-    name = "CMake",
-    command = "cmake",
-    success_message = "Done",
-    failure_message = "Failed",
-    log_filename = tmpname
+    name = ops.name or "CMake",
+    command = ops.command or "cmake",
+    success_message = ops.success_message or "Done",
+    failure_message = ops.failure_message or "Failed",
+    log_filename = ops.log_filename or os.tmpname()
   }
   setmetatable(o, self)
   self.__index = self
@@ -25,6 +25,7 @@ function command:_execute_task(args, on_progress, on_complete)
   local stderr = uv.new_pipe()
 
   handle, _ = uv.spawn(self.command, {args = args, stdio = {stdin, stdout, stderr}}, function(status, _)
+    ---@diagnostic disable-next-line: param-type-mismatch
     uv.close(handle)
     vim.schedule(function() on_complete(status) end)
   end)
