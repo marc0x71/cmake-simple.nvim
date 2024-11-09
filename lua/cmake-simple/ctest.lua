@@ -170,12 +170,8 @@ function ctest:goto_test()
 end
 
 function ctest:run_all_test()
-  -- TODO
-  --[[
-ctest --quiet --output-on-failure --output-junit /tmp/nvim.marco/uxQ42Y/0 --output-log /tmp/nvim.marco/uxQ42Y/1 --preset test-debug
-]] --
   if self.running then
-    ntf.notify("CTest already running", "warn")
+    ntf.notify("CTest already running", vim.log.levels.WARN)
     return
   end
   self.running = true
