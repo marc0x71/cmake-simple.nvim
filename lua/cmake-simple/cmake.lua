@@ -125,8 +125,17 @@ function cmake:clean()
 end
 
 function cmake:show_log()
-  local _, _ = window.centered_window()
+  local buf, _ = window.centered_window()
+
+  -- press 'q' or 'esc' to close window
+  for _, key in ipairs({'q', '<esc>'}) do
+    vim.api.nvim_buf_set_keymap(buf, 'n', key, '<cmd>close<cr>', {nowait = true, noremap = true, silent = true})
+  end
+
   vim.api.nvim_command("$read" .. self.log_filename)
+  vim.api.nvim_set_option_value("readonly", true, {buf = buf})
+  vim.api.nvim_set_option_value("modified", false, {buf = buf})
+
 end
 
 return cmake

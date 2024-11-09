@@ -25,7 +25,7 @@ local M = {
   end,
 
   buf_append_colorized = function(buf, content, content_type)
-    vim.api.nvim_buf_set_lines(buf, -1, -1, false, {content})
+    vim.api.nvim_buf_set_lines(buf, -1, -1, true, {content})
     local row = vim.api.nvim_buf_line_count(buf)
     local highlight = 'Normal'
     if content_type == "err" then
@@ -35,6 +35,16 @@ local M = {
     end
     vim.api.nvim_buf_add_highlight(buf, -1, highlight, row - 1, 0, content:len())
     return row
+  end,
+
+  idict = function(tbl)
+    local keys = {}
+    for k in next, tbl do table.insert(keys, k) end
+    return function(_, i)
+      i = i + 1
+      local k = keys[i]
+      if k then return i, k, tbl[k] end
+    end, keys, 0
   end,
 
   trim = function(s)

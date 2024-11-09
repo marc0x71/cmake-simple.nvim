@@ -1,4 +1,3 @@
-
 local M = {
   centered_window = function()
     local buf = vim.api.nvim_create_buf(false, true)
@@ -26,12 +25,28 @@ local M = {
 
     local win = vim.api.nvim_open_win(buf, true, opts)
 
-    -- press 'q' or 'esc' to clone window
-    for _, key in ipairs({'q', '<esc>'}) do
-      vim.api.nvim_buf_set_keymap(buf, 'n', key, '<cmd>close<cr>', {nowait = true, noremap = true, silent = true})
-    end
     return buf, win
   end,
+
+  panel_window = function()
+    local buf = vim.api.nvim_create_buf(false, true)
+
+    local width = vim.api.nvim_get_option_value("columns", {scope = "global"})
+    local win_width = math.min(math.ceil(width * 0.1), 30)
+
+    vim.api.nvim_set_option_value('bufhidden', 'wipe', {buf = buf})
+
+    local opts = {
+      style = "minimal",
+      split = "right",
+      win = 0,
+      width = win_width,
+    }
+    local win = vim.api.nvim_open_win(buf, true, opts)
+    vim.api.nvim_buf_set_lines(buf, -1, -1, true, {})
+
+    return buf, win
+  end
 }
 
 return M

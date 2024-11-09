@@ -6,6 +6,12 @@ local window_listener = listener:new()
 
 function window_listener:new(action)
   local buf, win = window.centered_window()
+
+  -- press 'q' or 'esc' to close window
+  for _, key in ipairs({'q', '<esc>'}) do
+    vim.api.nvim_buf_set_keymap(buf, 'n', key, '<cmd>close<cr>', {nowait = true, noremap = true, silent = true})
+  end
+
   local o = {action = action, win = win, buf = buf}
   setmetatable(o, self)
   self.__index = self
@@ -18,8 +24,16 @@ function window_listener:update(content_type, content)
   vim.api.nvim_win_set_cursor(self.win, {row, 0})
 end
 
-function window_listener:success() utils.buf_append_colorized(self.buf, "Success!", "end") end
+function window_listener:success()
+  utils.buf_append_colorized(self.buf, "Success!", "end")
+  vim.api.nvim_set_option_value("readonly", true, {buf = self.buf})
+  vim.api.nvim_set_option_value("modified", false, {buf = self.buf})
+end
 
-function window_listener:failure() utils.buf_append_colorized(self.buf, "Failure!", "end") end
+function window_listener:failure()
+  utils.buf_append_colorized(self.buf, "Failure!", "end")
+  vim.api.nvim_set_option_value("readonly", true, {buf = self.buf})
+  vim.api.nvim_set_option_value("modified", false, {buf = self.buf})
+end
 
 return window_listener
