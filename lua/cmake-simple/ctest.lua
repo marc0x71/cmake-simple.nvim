@@ -5,6 +5,7 @@ local scandir = require("plenary.scandir")
 local window = require("cmake-simple.lib.window")
 local command = require("cmake-simple.lib.command")
 local xml_parser = require('cmake-simple.lib.xml_parser')
+local testcases = require('cmake-simple.testcases')
 
 local icons = {ok = "✓", running = "⌛", failed = "✗", skipped = "⚐", unknown = "⯑"}
 local ctest = {}
@@ -15,7 +16,7 @@ function ctest:new(o)
     preset_list = {},
     selected_preset = nil,
     test_dir = nil,
-    test_list = {},
+    test_cases = testcases:new(),
     test_folders = {},
     testcases_buf = nil,
     summary = nil,
@@ -44,21 +45,6 @@ function ctest:load_presets()
   end
 end
 
-local function _decode_testlist(json)
-  local result = {}
-  for _, test in ipairs(json.tests) do
-    local cwd = utils.get_path(test.command[1])
-    for _, prop in ipairs(test.properties) do
-      if prop.name == 'WORKING_DIRECTORY' then
-        cwd = prop.value
-        break
-      end
-    end
-    result[test.name] = {command = test.command, cwd = cwd, status = 'unk', output = nil}
-  end
-  return result
-end
-
 function ctest:testcases()
   self:search_test_folders()
   if self.test_dir == nil or next(self.test_folders) == nil then
@@ -66,7 +52,6 @@ function ctest:testcases()
     return
   end
 
-  self.test_list = {}
   local cmd = {"ctest", "--show-only=json-v1", "--test-dir", self.test_dir}
   if next(self.preset_list) ~= nil then
     if self.selected_preset == nil then
@@ -78,11 +63,10 @@ function ctest:testcases()
   local result = vim.system(cmd, {text = true}):wait()
   if result.code == 0 then
     local json = vim.json.decode(result.stdout)
-    self.test_list = _decode_testlist(json)
-    if next(self.test_list) ~= nil then self:search_test_files() end
+    if self.test_cases:load_testlist(json) then self:search_test_files() end
   end
-  if result.code ~= 0 or next(self.test_list) == nil then
-    ntf.notify("Failed to locate retrieve test list", vim.log.levels.ERROR)
+  if result.code ~= 0 or not self.test_cases:has_tests() then
+    ntf.notify("Failed to retrieve test list", vim.log.levels.ERROR)
     return
   end
 
@@ -102,9 +86,7 @@ function ctest:search_test_files()
       end,
       on_exit = function()
         count = count - 1
-        for k, v in pairs(files) do
-          if self.test_list[k] ~= nil then self.test_list[k] = vim.tbl_extend('keep', self.test_list[k], v) end
-        end
+        for k, v in pairs(files) do self.test_cases:update_test(k, v) end
         if count <= 0 then vim.schedule(function() self:update_testcases() end) end
       end
     })
@@ -150,8 +132,7 @@ function ctest:_get_selected()
   local r, _ = unpack(vim.api.nvim_win_get_cursor(0))
   local row = r - 2;
   if row < 0 then return nil end
-  for k, v in utils.idict(self.test_list) do if k == row then return v, self.test_list[v] end end
-  return nil
+  return self.test_cases:get_by_index(row)
 end
 
 function ctest:goto_test()
@@ -176,6 +157,9 @@ function ctest:run_all_test()
   end
   self.running = true
 
+  self.test_cases:set_tests_status("unk")
+  self:update_testcases()
+
   local result_filename = os.tmpname()
 
   local cmd = command:new({name = "CTest", command = "ctest", log_filename = self.log_filename})
@@ -185,7 +169,7 @@ function ctest:run_all_test()
 
   cmd:execute(args, "Running all tests", function(_)
     self.running = false;
-    self:update_testlist(result_filename)
+    self:update_results(result_filename)
   end)
 
 end
@@ -199,6 +183,9 @@ function ctest:run_test(name, _)
   end
   self.running = true
 
+  self.test_cases:set_test_status(name, "unk")
+  self:update_testcases()
+
   local result_filename = os.tmpname()
 
   local cmd = command:new({name = "CTest", command = "ctest", log_filename = self.log_filename})
@@ -208,7 +195,7 @@ function ctest:run_test(name, _)
 
   cmd:execute(args, "Running test " .. name, function(_)
     self.running = false;
-    self:update_testlist(result_filename)
+    self:update_results(result_filename)
   end)
 end
 
@@ -245,7 +232,7 @@ function ctest:update_testcases()
   self:_create_win_testcases()
   vim.api.nvim_buf_set_lines(self.testcases_buf, 0, -1, true, {"Testcases", ""})
   vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "Title", 0, 0, 100)
-  for k, v in pairs(self.test_list) do
+  for k, v in pairs(self.test_cases.test_list) do
     local icon = icons.unknown
     if v["status"] == "run" then
       icon = icons.ok
@@ -271,32 +258,20 @@ function ctest:update_testcases()
 
 end
 
-function ctest:update_testlist(result_filename)
-
+function ctest:update_results(result_filename)
   local file = io.open(result_filename, "rb")
   if file ~= nil then
     local str = file:read("*all")
+    file:close()
     local xml = xml_parser(str)
-    self.summary = xml[1]["attrs"]
-    local testcases = xml[1]["children"]
-    for _, testcase in pairs(testcases) do
-      local name = testcase["attrs"]["name"]
-      local classname = testcase["attrs"]["classname"]
-      local status = testcase["attrs"]["status"]
-      local output = ""
-      for _, child in pairs(testcase["children"]) do
-        if child["name"] == "system-out" then
-          output = child["content"]
-          break
-        end
-      end
-      if self.test_list[name] ~= nil then
-        self.test_list[name]["status"] = status
-        self.test_list[name]["output"] = output
-      else
-        ntf.notify("Test " .. name .. " not found", vim.log.levels.WARN)
-      end
+    if xml ~= nil then
+      local missing = self.test_cases:update_results(xml)
+      for _, name in ipairs(missing) do ntf.notify("Test " .. name .. " not found", vim.log.levels.WARN) end
+    else
+      ntf.notify("Unable to parse junit result " .. result_filename, vim.log.levels.ERROR)
     end
+  else
+    ntf.notify("Unable to find junit result " .. result_filename, vim.log.levels.ERROR)
   end
   self:update_testcases()
 end
