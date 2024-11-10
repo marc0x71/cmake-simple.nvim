@@ -19,9 +19,11 @@ function ctest:new(o)
     test_cases = testcases:new(),
     test_folders = {},
     testcases_buf = nil,
+    testcases_win = nil,
     job = 2,
     log_filename = log_filename,
-    running = false
+    running = false,
+    last_position = nil
   }
   setmetatable(o, self)
   self.__index = self
@@ -129,6 +131,7 @@ end
 
 function ctest:_get_selected()
   local r, _ = unpack(vim.api.nvim_win_get_cursor(0))
+  self.last_position = r
   local row = r - 4;
   if row < 0 then return nil end
   return self.test_cases:get_by_index(row)
@@ -214,13 +217,15 @@ function ctest:run_test(name, _)
   cmd:execute(args, "Running test " .. name, function(_)
     self.running = false;
     self:update_results(result_filename)
+    vim.api.nvim_win_set_cursor(self.testcases_win, {self.last_position, 0})
   end)
 end
 
 function ctest:_create_win_testcases()
   if self.testcases_buf == nil or not vim.api.nvim_buf_is_valid(self.testcases_buf) then
     self.main_window = vim.api.nvim_get_current_win();
-    local buf, _ = window.panel_window()
+    vim.api.nvim_set_option_value("buftype", "nofile", {buf = self.buf})
+    local buf, win = window.panel_window(self.test_cases.max_name_len + 3)
     vim.api.nvim_buf_set_keymap(buf, 'n', '<enter>', '', {
       nowait = true,
       noremap = true,
@@ -246,8 +251,15 @@ function ctest:_create_win_testcases()
       callback = function() self:run_all_test() end
     })
     self.testcases_buf = buf
+    self.testcases_win = win
+
+    vim.api.nvim_set_option_value("modified", false, {buf = self.testcases_buf})
+    vim.api.nvim_set_option_value("bufhidden", "wipe", {buf = self.testcases_buf})
+    vim.api.nvim_set_option_value("readonly", true, {buf = self.testcases_buf})
   else
+    vim.api.nvim_set_option_value("readonly", false, {buf = self.testcases_buf})
     vim.api.nvim_buf_set_lines(self.testcases_buf, 0, -1, false, {})
+    vim.api.nvim_set_option_value("readonly", true, {buf = self.testcases_buf})
   end
   return self.testcases_buf
 end
@@ -256,7 +268,6 @@ function ctest:update_testcases()
   self:_create_win_testcases()
 
   vim.api.nvim_set_option_value("readonly", false, {buf = self.buf})
-  vim.api.nvim_set_option_value("modified", true, {buf = self.buf})
 
   vim.api.nvim_buf_set_lines(self.testcases_buf, 0, -1, true, {"Testcases", ""})
   vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "Title", 0, 0, 100)
@@ -289,7 +300,6 @@ function ctest:update_testcases()
   end
 
   vim.api.nvim_set_option_value("readonly", true, {buf = self.buf})
-  vim.api.nvim_set_option_value("modified", false, {buf = self.buf})
 end
 
 function ctest:update_results(result_filename)

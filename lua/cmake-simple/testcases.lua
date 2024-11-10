@@ -3,7 +3,7 @@ local utils = require('cmake-simple.lib.utils')
 local testcases = {}
 
 function testcases:new(o)
-  o = o or {test_list = {}, summary = nil}
+  o = o or {test_list = {}, summary = nil, max_name_len = 1}
 
   setmetatable(o, self)
   self.__index = self
@@ -21,6 +21,7 @@ function testcases:load_testlist(json)
       end
     end
     self.test_list[test.name] = {command = test.command, cwd = cwd, status = 'unk', output = nil}
+    if test.name:len() > self.max_name_len then self.max_name_len = test.name:len() end
   end
   self:_reset_summary()
   return next(self.test_list) ~= nil
