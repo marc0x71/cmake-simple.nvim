@@ -56,10 +56,6 @@ local M = {
     return (s:gsub("^%s*(.-)%s*$", "%1"))
   end,
 
-  starts_with = function(s, start) return s:sub(1, #start) == start end,
-
-  ends_with = function(s, ending) return ending == "" or s:sub(-#ending) == ending end
-
 }
 
 return M

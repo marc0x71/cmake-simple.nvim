@@ -26,16 +26,16 @@ local function attrs_parse(attr_str)
 end
 
 local function element_parse(tag_str)
-  local self_closing = utils.starts_with(tag_str, "?")
+  local self_closing = vim.startswith(tag_str, "?")
   local end_tag = false
   local name, other = string.match(tag_str, xml_tag.TAG_NAME)
   if name == nil then return nil end
   name = utils.trim(name)
   other = utils.trim(other)
-  if utils.starts_with(name, "/") then
+  if vim.startswith(name, "/") then
     end_tag = true
     name = name:sub(2)
-  elseif utils.ends_with(other, "/") then
+  elseif vim.endswith(other, "/") then
     self_closing = true
     other = other:sub(1, -2)
   end

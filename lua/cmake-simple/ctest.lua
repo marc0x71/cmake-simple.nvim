@@ -117,7 +117,7 @@ function ctest:search_test_folders()
     if source_dir ~= nil then
       local found = false
       for _, s in ipairs(self.test_folders) do
-        if utils.starts_with(source_dir, s) then
+        if vim.startswith(source_dir, s) then
           found = true
           break
         end
