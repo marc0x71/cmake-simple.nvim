@@ -129,7 +129,7 @@ end
 
 function ctest:_get_selected()
   local r, _ = unpack(vim.api.nvim_win_get_cursor(0))
-  local row = r - 2;
+  local row = r - 4;
   if row < 0 then return nil end
   return self.test_cases:get_by_index(row)
 end
@@ -173,6 +173,25 @@ function ctest:run_all_test()
 
 end
 
+function ctest:test_log(name, detail)
+  if detail.output == nil then
+    ntf.notify("No log found for test " .. name, vim.log.levels.WARN)
+    return
+  end
+  local buf, _ = window.centered_window()
+
+  -- press 'q' or 'esc' to close window
+  for _, key in ipairs({'q', '<esc>'}) do
+    vim.api.nvim_buf_set_keymap(buf, 'n', key, '<cmd>close<cr>', {nowait = true, noremap = true, silent = true})
+  end
+
+  local lines = vim.split(detail.output, "\n")
+  vim.api.nvim_buf_set_lines(buf, -1, -1, true, lines)
+
+  vim.api.nvim_set_option_value("readonly", true, {buf = buf})
+  vim.api.nvim_set_option_value("modified", false, {buf = buf})
+end
+
 function ctest:run_test(name, _)
   if name == nil then return end
 
@@ -213,6 +232,12 @@ function ctest:_create_win_testcases()
       noremap = true,
       silent = true,
       callback = function() self:run_test(self:_get_selected()) end
+    })
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'l', '', {
+      nowait = true,
+      noremap = true,
+      silent = true,
+      callback = function() self:test_log(self:_get_selected()) end
     })
     vim.api.nvim_buf_set_keymap(buf, 'n', 'R', '', {
       nowait = true,
