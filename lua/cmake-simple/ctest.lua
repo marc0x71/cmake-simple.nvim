@@ -19,7 +19,6 @@ function ctest:new(o)
     test_cases = testcases:new(),
     test_folders = {},
     testcases_buf = nil,
-    summary = nil,
     job = 2,
     log_filename = log_filename,
     running = false
@@ -232,6 +231,19 @@ function ctest:update_testcases()
   self:_create_win_testcases()
   vim.api.nvim_buf_set_lines(self.testcases_buf, 0, -1, true, {"Testcases", ""})
   vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "Title", 0, 0, 100)
+  local summary = self.test_cases.summary
+  if summary ~= nil then
+    local success = icons.ok .. " " .. tostring(summary.success)
+    local failed = icons.failed .. " " .. tostring(summary.failed)
+    local skipped = icons.skipped .. " " .. tostring(summary.skipped)
+    vim.api.nvim_buf_set_lines(self.testcases_buf, -1, -1, true, {" " .. success .. " " .. failed .. " " .. skipped, ""})
+    vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "DiagnosticOk", 2, 0, success:len() + 1)
+    vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "DiagnosticError", 2, success:len() + 2,
+                                   success:len() + failed:len() + 2)
+    vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "DiagnosticInfo", 2, success:len() + failed:len() + 3,
+                                   success:len() + failed:len() + skipped:len() + 3)
+  end
+
   for k, v in pairs(self.test_cases.test_list) do
     local icon = icons.unknown
     if v["status"] == "run" then
@@ -244,16 +256,6 @@ function ctest:update_testcases()
       icon = icons.skipped
     end
     utils.buf_append_colorized(self.testcases_buf, icon .. " " .. k, v["status"])
-  end
-  if self.summary ~= nil then
-    local success = tonumber(self.summary["tests"]) - tonumber(self.summary["disabled"]) -
-                        tonumber(self.summary["failures"]) - tonumber(self.summary["skipped"])
-
-    vim.api.nvim_buf_set_lines(self.testcases_buf, -1, -1, true, {
-      "", "   " .. icons.ok .. " " .. tostring(success) .. " " .. icons.failed .. " " .. self.summary["failures"],
-      "   " .. icons.skipped .. " " .. self.summary["skipped"] .. " " .. icons.unknown .. " " ..
-          self.summary["disabled"]
-    })
   end
 
 end

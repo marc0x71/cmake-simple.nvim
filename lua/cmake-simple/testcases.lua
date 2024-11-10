@@ -3,7 +3,7 @@ local utils = require('cmake-simple.lib.utils')
 local testcases = {}
 
 function testcases:new(o)
-  o = o or {test_list = {}}
+  o = o or {test_list = {}, summary = nil}
 
   setmetatable(o, self)
   self.__index = self
@@ -22,6 +22,7 @@ function testcases:load_testlist(json)
     end
     self.test_list[test.name] = {command = test.command, cwd = cwd, status = 'unk', output = nil}
   end
+  self:_reset_summary()
   return next(self.test_list) ~= nil
 end
 
@@ -37,10 +38,9 @@ function testcases:update_test(name, details)
 end
 
 function testcases:update_results(xml)
-  self.summary = xml[1]["attrs"]
+  self:_update_summary(xml[1]["attrs"])
   local missing = {}
   for _, testcase in pairs(xml[1]["children"]) do
-    P(testcase)
     local name = testcase["attrs"]["name"]
     ---@diagnostic disable-next-line: unused-local
     local classname = testcase["attrs"]["classname"]
@@ -53,12 +53,10 @@ function testcases:update_results(xml)
       end
     end
     if self.test_list[name] ~= nil then
-      print(name, status)
       self.test_list[name] = vim.tbl_extend('force', self.test_list[name], {status = status, output = output})
     else
       table.insert(missing, name)
     end
-    P(self.test_list[name])
   end
   return missing
 end
@@ -75,5 +73,23 @@ function testcases:set_test_status(name, state)
 end
 
 function testcases:set_tests_status(state) for _, t in pairs(self.test_list) do t["status"] = state end end
+
+function testcases:_reset_summary()
+  self.summary = {total = vim.tbl_count(self.test_list), success = 0, failed = 0, skipped = 0}
+end
+
+function testcases:_update_summary(attrs)
+  if self.summary == nil then return end
+  local disabled = tonumber(attrs["disabled"] or "0")
+  local failures = tonumber(attrs["failures"] or "0")
+  local tests = tonumber(attrs["tests"] or "0")
+  local skipped = tonumber(attrs["skipped"] or "0")
+  self.summary = {
+    total = tests,
+    success = (tests - skipped - disabled - failures),
+    failed = failures,
+    skipped = skipped
+  }
+end
 
 return testcases
