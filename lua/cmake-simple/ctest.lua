@@ -229,6 +229,10 @@ end
 
 function ctest:update_testcases()
   self:_create_win_testcases()
+
+  vim.api.nvim_set_option_value("readonly", false, {buf = self.buf})
+  vim.api.nvim_set_option_value("modified", true, {buf = self.buf})
+
   vim.api.nvim_buf_set_lines(self.testcases_buf, 0, -1, true, {"Testcases", ""})
   vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "Title", 0, 0, 100)
   local summary = self.test_cases.summary
@@ -236,7 +240,8 @@ function ctest:update_testcases()
     local success = icons.ok .. " " .. tostring(summary.success)
     local failed = icons.failed .. " " .. tostring(summary.failed)
     local skipped = icons.skipped .. " " .. tostring(summary.skipped)
-    vim.api.nvim_buf_set_lines(self.testcases_buf, -1, -1, true, {" " .. success .. " " .. failed .. " " .. skipped, ""})
+    vim.api
+        .nvim_buf_set_lines(self.testcases_buf, -1, -1, true, {" " .. success .. " " .. failed .. " " .. skipped, ""})
     vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "DiagnosticOk", 2, 0, success:len() + 1)
     vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "DiagnosticError", 2, success:len() + 2,
                                    success:len() + failed:len() + 2)
@@ -258,6 +263,8 @@ function ctest:update_testcases()
     utils.buf_append_colorized(self.testcases_buf, icon .. " " .. k, v["status"])
   end
 
+  vim.api.nvim_set_option_value("readonly", true, {buf = self.buf})
+  vim.api.nvim_set_option_value("modified", false, {buf = self.buf})
 end
 
 function ctest:update_results(result_filename)
