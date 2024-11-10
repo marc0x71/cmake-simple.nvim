@@ -190,11 +190,26 @@ function ctest:run_all_test()
 
 end
 
-function ctest:run_test(name, detail)
+function ctest:run_test(name, _)
   if name == nil then return end
-  P(detail)
-  ntf.notify("Running test " .. name, vim.log.levels.INFO)
-  -- TODO
+
+  if self.running then
+    ntf.notify("CTest already running", vim.log.levels.WARN)
+    return
+  end
+  self.running = true
+
+  local result_filename = os.tmpname()
+
+  local cmd = command:new({name = "CTest", command = "ctest", log_filename = self.log_filename})
+  local args = {"--output-on-failure", "--output-junit", result_filename, "-R", "^" .. name .. "$"}
+
+  if self.selected_preset ~= nil then vim.list_extend(args, {'--preset', self.selected_preset}) end
+
+  cmd:execute(args, "Running test " .. name, function(_)
+    self.running = false;
+    self:update_testlist(result_filename)
+  end)
 end
 
 function ctest:_create_win_testcases()
@@ -249,7 +264,8 @@ function ctest:update_testcases()
 
     vim.api.nvim_buf_set_lines(self.testcases_buf, -1, -1, true, {
       "", "   " .. icons.ok .. " " .. tostring(success) .. " " .. icons.failed .. " " .. self.summary["failures"],
-      "   " .. icons.skipped .. " " .. self.summary["skipped"] .. " " .. icons.unknown .. " " .. self.summary["disabled"]
+      "   " .. icons.skipped .. " " .. self.summary["skipped"] .. " " .. icons.unknown .. " " ..
+          self.summary["disabled"]
     })
   end
 
