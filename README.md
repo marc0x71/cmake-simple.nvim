@@ -67,6 +67,21 @@ You can use your preferred package manager, the following example is based on
 }
 ```
 
+## CTest
+
+Using `cmake-simple` you can easly execute test using the following keyboard shortcut in the `CTestCases` command :
+
+- `R` - execute all tests
+- `r` - execute selected test
+- `d` - debug selected test
+- `l` - show last log of selected test
+- `<CR>` - go to the source code of selected test
+
+Currently only for the following test framework is supported the "go-to" feature:
+
+- [`GTest`](https://github.com/google/googletest)
+- [`Catch2`](https://github.com/catchorg/Catch2)
+
 ## Troubleshooting
 
 If this plugin isn't working, feel free to make an issue or a pull request.
