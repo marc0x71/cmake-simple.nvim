@@ -6,13 +6,14 @@ local window = require("cmake-simple.lib.window")
 local command = require("cmake-simple.lib.command")
 local xml_parser = require('cmake-simple.lib.xml_parser')
 local testcases = require('cmake-simple.testcases')
+local dap = require("dap")
 
 local icons = {ok = "✓", running = "⌛", failed = "✗", skipped = "⚐", unknown = "⯑"}
 local ctest = {}
 
-function ctest:new(o)
+function ctest:new(dap_adapter)
   local log_filename = os.tmpname()
-  o = o or {
+  local o = {
     preset_list = {},
     selected_preset = nil,
     test_dir = nil,
@@ -23,7 +24,8 @@ function ctest:new(o)
     job = 2,
     log_filename = log_filename,
     running = false,
-    last_position = nil
+    last_position = nil,
+    dap_adapter = dap_adapter or "gdb"
   }
   setmetatable(o, self)
   self.__index = self
@@ -221,6 +223,25 @@ function ctest:run_test(name, _)
   end)
 end
 
+function ctest:debug_test(name, details)
+  if name == nil then return end
+
+  ntf.notify("Debug test " .. name, vim.log.levels.INFO)
+
+  local dap_config = {
+    args = {unpack(details.command, 2)},
+    cwd = details.cwd,
+    program = details.command[1],
+    request = "launch",
+    name = "Debug test " .. name,
+    type = self.dap_adapter
+  }
+
+  vim.api.nvim_buf_delete(self.testcases_buf, {})
+
+  dap.run(dap_config)
+end
+
 function ctest:_create_win_testcases()
   if self.testcases_buf == nil or not vim.api.nvim_buf_is_valid(self.testcases_buf) then
     self.main_window = vim.api.nvim_get_current_win();
@@ -237,6 +258,12 @@ function ctest:_create_win_testcases()
       noremap = true,
       silent = true,
       callback = function() self:run_test(self:_get_selected()) end
+    })
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'd', '', {
+      nowait = true,
+      noremap = true,
+      silent = true,
+      callback = function() self:debug_test(self:_get_selected()) end
     })
     vim.api.nvim_buf_set_keymap(buf, 'n', 'l', '', {
       nowait = true,
