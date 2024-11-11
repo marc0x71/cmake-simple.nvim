@@ -37,13 +37,17 @@ You can use your preferred package manager, the following example is based on
       },
     },
     lazy = false,
-    opts = {build_folder = "build", jobs = 2, dap_adapter = "gdb"},
+    opts = {
+        build_folder = "build", 
+        jobs = 2, 
+        dap_adapter = "gdb"
+    },
     keys = {
-      { '<leader>mc',  '<cmd>CMakeConfigure<cr>',  desc="Configure project" },
-      { '<leader>mb',  '<cmd>CMakeBuild<cr>',  desc="Build project" },
-      { '<leader>mC',  '<cmd>CMakeClean<cr>',  desc="Clean project" },
-      { '<leader>ml',  '<cmd>CMakeLog<cr>',  desc="Show last log" },
-      {'<leader>mt', '<cmd>CTestCases<cr>', desc = "Show tests"}
+      { '<leader>mc',  '<cmd>CMakeConfigure<cr>', desc = "Configure project" },
+      { '<leader>mb',  '<cmd>CMakeBuild<cr>',     desc = "Build project" },
+      { '<leader>mC',  '<cmd>CMakeClean<cr>',     desc = "Clean project" },
+      { '<leader>ml',  '<cmd>CMakeLog<cr>',       desc = "Show last log" },
+      { '<leader>mt',  '<cmd>CTestCases<cr>',     desc = "Show tests" }
     }
 }
 ```
