@@ -11,7 +11,7 @@ local dap = require("dap")
 local icons = {ok = "✓", running = "⌛", failed = "✗", skipped = "⚐", unknown = "⯑"}
 local ctest = {}
 
-function ctest:new(dap_adapter)
+function ctest:new(opts)
   local log_filename = os.tmpname()
   local o = {
     preset_list = {},
@@ -21,11 +21,10 @@ function ctest:new(dap_adapter)
     test_folders = {},
     testcases_buf = nil,
     testcases_win = nil,
-    job = 2,
     log_filename = log_filename,
     running = false,
     last_position = nil,
-    dap_adapter = dap_adapter or "gdb"
+    opts = opts
   }
   setmetatable(o, self)
   self.__index = self
@@ -161,6 +160,7 @@ function ctest:run_all_test()
   end
   self.running = true
 
+  local _ = self:_get_selected()
   self.test_cases:set_tests_status("unk")
   self:update_testcases()
 
@@ -168,17 +168,20 @@ function ctest:run_all_test()
 
   local cmd = command:new({name = "CTest", command = "ctest", log_filename = self.log_filename})
   local args = {"--output-on-failure", "--output-junit", result_filename}
+  if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
 
   if self.selected_preset ~= nil then vim.list_extend(args, {'--preset', self.selected_preset}) end
 
   cmd:execute(args, "Running all tests", function(_)
     self.running = false;
     self:update_results(result_filename)
+    vim.api.nvim_win_set_cursor(self.testcases_win, {self.last_position, 0})
   end)
 
 end
 
 function ctest:test_log(name, detail)
+  if name == nil then return end
   if detail.output == nil then
     ntf.notify("No log found for test " .. name, vim.log.levels.WARN)
     return
@@ -234,7 +237,7 @@ function ctest:debug_test(name, details)
     program = details.command[1],
     request = "launch",
     name = "Debug test " .. name,
-    type = self.dap_adapter
+    type = self.opts:get().dap_adapter
   }
 
   vim.api.nvim_buf_delete(self.testcases_buf, {})

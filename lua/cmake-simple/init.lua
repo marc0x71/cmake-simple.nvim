@@ -1,7 +1,4 @@
-local utils = require('cmake-simple.lib.utils')
-local notification = require('cmake-simple.lib.notification')
-
-local function _init()
+local function _init_commands()
   -- Autocommand
   local cmake_simple_augroup = vim.api.nvim_create_augroup("cmakesimpleaugroup", {clear = true})
 
@@ -48,64 +45,23 @@ local function _init()
   })
 end
 
-local log_filename = os.tmpname()
-local M = {cmake_instance = nil, ctest_instance = nil}
+local M = {}
 
-M.setup = function(opts) print("Options: ", opts) end
+M.setup = function(opts) require("cmake-simple.app").get():update(opts) end
 
-M.initialize = function()
-  local cwd = vim.loop.cwd()
-  if not utils.file_exists("CMakeLists.txt") then return end
+M.initialize = function() require("cmake-simple.app").get():initialize() end
 
-  notification.notify("CMakeLists.txt found in " .. cwd, vim.log.levels.INFO)
+M.configure = function() require("cmake-simple.app").get():configure() end
 
-  M.cmake_instance = require('cmake-simple.cmake'):new(log_filename)
-  M.cmake_instance:load_presets()
-  M.ctest_instance = require('cmake-simple.ctest'):new()
-  M.ctest_instance:load_presets()
-end
+M.build = function() require("cmake-simple.app").get():build() end
 
-M.configure = function()
-  if (M.cmake_instance == nil) then
-    notification.notify("Initialization not completed", vim.log.levels.ERROR)
-  else
-    M.cmake_instance:configure()
-  end
-end
+M.clean = function() require("cmake-simple.app").get():clean() end
 
-M.build = function()
-  if (M.cmake_instance == nil) then
-    notification.notify("Initialization not completed", vim.log.levels.ERROR)
-  else
-    M.cmake_instance:build()
-  end
-end
+M.show_log = function() require("cmake-simple.app").get():show_log() end
 
-M.clean = function()
-  if (M.cmake_instance == nil) then
-    notification.notify("Initialization not completed", vim.log.levels.ERROR)
-  else
-    M.cmake_instance:clean()
-  end
-end
+M.testcases = function() require("cmake-simple.app").get():testcases() end
 
-M.show_log = function()
-  if (M.cmake_instance == nil) then
-    notification.notify("Initialization not completed", vim.log.levels.ERROR)
-  else
-    M.cmake_instance:show_log()
-  end
-end
-
-M.testcases = function() 
-  if (M.ctest_instance == nil) then
-    notification.notify("Initialization not completed", vim.log.levels.ERROR)
-  else
-    M.ctest_instance:testcases()
-  end
-end
-
-_init()
+_init_commands()
 
 return M
 

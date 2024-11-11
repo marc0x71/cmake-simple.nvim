@@ -4,16 +4,15 @@ local window = require('cmake-simple.lib.window')
 
 local cmake = {}
 
-function cmake:new(log_filename)
+function cmake:new(opts, log_filename)
 
   local o = {
     cwd = ".",
-    build_folder = "build",
-    jobs = 2,
     clean_first = true,
     preset_list = {configure = {}, build = {}, test = {}},
     selected_preset = {configure = nil, build = nil, test = nil},
     running = false,
+    opts = opts,
     log_filename = log_filename
   }
   setmetatable(o, self)
@@ -66,7 +65,7 @@ function cmake:configure()
     return
   end
   local cmd = command:new({log_filename = self.log_filename})
-  local args = {"-S", self.cwd, "-B", self.build_folder}
+  local args = {"-S", self.cwd, "-B", self.opts:get().build_folder}
   cmd:execute(args, "Configure", function(_) self.running = false; end)
 end
 
@@ -75,7 +74,7 @@ function cmake:build_from_preset()
   local preset_name = self:get_preset("build")
   local args = {"--build", "--preset", preset_name}
   if self.clean_first then args = vim.list_extend(args, {'--clean-first'}) end
-  if self.jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.jobs)}) end
+  if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
   cmd:execute(args, "Build using preset " .. preset_name, function(_) self.running = false; end)
 end
 
@@ -89,12 +88,12 @@ function cmake:build()
     self:build_from_preset()
     return
   else
-    vim.fn.mkdir(self.build_folder, "p")
+    vim.fn.mkdir(self.opts:get().build_folder, "p")
   end
 
-  local args = {"--build", self.build_folder}
+  local args = {"--build", self.opts:get().build_folder}
   if self.clean_first then args = vim.list_extend(args, {'--clean-first'}) end
-  if self.jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.jobs)}) end
+  if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
   local cmd = command:new({log_filename = self.log_filename})
   cmd:execute(args, "Build", function(_) self.running = false; end)
 end
@@ -116,10 +115,10 @@ function cmake:clean()
     self:clean_from_preset()
     return
   else
-    vim.fn.mkdir(self.build_folder, "p")
+    vim.fn.mkdir(self.opts:get().build_folder, "p")
   end
 
-  local args = {"--build", self.build_folder, "--target", "clean"}
+  local args = {"--build", self.opts:get().build_folder, "--target", "clean"}
   local cmd = command:new({log_filename = self.log_filename})
   cmd:execute(args, "Clean", function(_) self.running = false; end)
 end
