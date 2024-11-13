@@ -150,6 +150,8 @@ function ctest:goto_test()
     end
     vim.api.nvim_set_current_win(self.main_window)
     vim.cmd('edit ' .. vim.fn.fnameescape(detail["filename"]) .. '|' .. detail['row'])
+  else
+    ntf.notify("No source code found for " .. name)
   end
 end
 
@@ -280,6 +282,12 @@ function ctest:_create_win_testcases()
       silent = true,
       callback = function() self:run_all_test() end
     })
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<F5>', '', {
+      nowait = true,
+      noremap = true,
+      silent = true,
+      callback = function() self:refresh() end
+    })
     self.testcases_buf = buf
     self.testcases_win = win
 
@@ -325,13 +333,13 @@ function ctest:update_testcases()
       icon = icons.running
     elseif v["status"] == "fail" then
       icon = icons.failed
-      table.insert(qf_items, { filename=v["filename"], lnum = v["row"], type="E", text="Test fails" })
+      table.insert(qf_items, {filename = v["filename"], lnum = v["row"], type = "E", text = "Test fails"})
     elseif v["status"] == "skipped" then
       icon = icons.skipped
     end
     utils.buf_append_colorized(self.testcases_buf, icon .. " " .. k, v["status"])
   end
-  vim.fn.setqflist({}, 'r', {title="Test results", items=qf_items})
+  vim.fn.setqflist({}, 'r', {title = "Test results", items = qf_items})
 
   vim.api.nvim_set_option_value("readonly", true, {buf = self.buf})
 end
@@ -352,6 +360,11 @@ function ctest:update_results(result_filename)
     ntf.notify("Unable to find junit result " .. result_filename, vim.log.levels.ERROR)
   end
   self:update_testcases()
+end
+
+function ctest:refresh()
+  self.selected_preset = nil
+  self:testcases()
 end
 
 return ctest
