@@ -315,6 +315,8 @@ function ctest:update_testcases()
                                    success:len() + failed:len() + skipped:len() + 3)
   end
 
+  local qf_items = {}
+
   for k, v in pairs(self.test_cases.test_list) do
     local icon = icons.unknown
     if v["status"] == "run" then
@@ -323,11 +325,13 @@ function ctest:update_testcases()
       icon = icons.running
     elseif v["status"] == "fail" then
       icon = icons.failed
+      table.insert(qf_items, { filename=v["filename"], lnum = v["row"], type="E", text="Test fails" })
     elseif v["status"] == "skipped" then
       icon = icons.skipped
     end
     utils.buf_append_colorized(self.testcases_buf, icon .. " " .. k, v["status"])
   end
+  vim.fn.setqflist({}, 'r', {title="Test results", items=qf_items})
 
   vim.api.nvim_set_option_value("readonly", true, {buf = self.buf})
 end

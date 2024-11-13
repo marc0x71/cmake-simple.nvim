@@ -8,7 +8,6 @@ function cmake:new(opts, log_filename)
 
   local o = {
     cwd = ".",
-    clean_first = true,
     preset_list = {configure = {}, build = {}, test = {}},
     selected_preset = {configure = nil, build = nil, test = nil},
     running = false,
@@ -73,7 +72,7 @@ function cmake:build_from_preset()
   local cmd = command:new({log_filename = self.log_filename})
   local preset_name = self:get_preset("build")
   local args = {"--build", "--preset", preset_name}
-  if self.clean_first then args = vim.list_extend(args, {'--clean-first'}) end
+  if self.opts:get().clean_first then args = vim.list_extend(args, {'--clean-first'}) end
   if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
   cmd:execute(args, "Build using preset " .. preset_name, function(_) self.running = false; end)
 end
@@ -92,7 +91,7 @@ function cmake:build()
   end
 
   local args = {"--build", self.opts:get().build_folder}
-  if self.clean_first then args = vim.list_extend(args, {'--clean-first'}) end
+  if self.opts:get().clean_first then args = vim.list_extend(args, {'--clean-first'}) end
   if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
   local cmd = command:new({log_filename = self.log_filename})
   cmd:execute(args, "Build", function(_) self.running = false; end)

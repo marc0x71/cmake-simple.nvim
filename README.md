@@ -41,7 +41,8 @@ You can use your preferred package manager, the following example is based on
     opts = {
         build_folder = "build", 
         jobs = 2, 
-        dap_adapter = "gdb"
+        dap_adapter = "gdb",
+        clean_first = false
     },
     keys = {
       { '<leader>mc',  '<cmd>CMakeConfigure<cr>', desc = "Configure project" },
@@ -64,7 +65,9 @@ You can use your preferred package manager, the following example is based on
     -- How many jobs can be used for building and running all tests
     jobs = 2, 
     -- The dap adapter used for debugging
-    dap_adapter = "gdb"
+    dap_adapter = "gdb",
+    -- Clean targets before build
+    clean_first = false
 }
 ```
 
