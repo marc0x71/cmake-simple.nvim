@@ -243,6 +243,7 @@ function ctest:debug_test(name, details)
   }
 
   vim.api.nvim_buf_delete(self.testcases_buf, {})
+  self.testcases_buf = nil;
 
   dap.run(dap_config)
 end
@@ -250,8 +251,26 @@ end
 function ctest:_create_win_testcases()
   if self.testcases_buf == nil or not vim.api.nvim_buf_is_valid(self.testcases_buf) then
     self.main_window = vim.api.nvim_get_current_win();
-    vim.api.nvim_set_option_value("buftype", "nofile", {buf = self.buf})
     local buf, win = window.panel_window(self.test_cases.max_name_len + 3)
+    vim.api.nvim_set_option_value("buftype", "nofile", {buf = buf})
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', '', {
+      nowait = true,
+      noremap = true,
+      silent = true,
+      callback = function()
+        vim.api.nvim_buf_delete(self.testcases_buf, {})
+        self.testcases_buf = nil;
+      end
+    })
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<esc>', '', {
+      nowait = true,
+      noremap = true,
+      silent = true,
+      callback = function()
+        vim.api.nvim_buf_delete(self.testcases_buf, {})
+        self.testcases_buf = nil;
+      end
+    })
     vim.api.nvim_buf_set_keymap(buf, 'n', '<enter>', '', {
       nowait = true,
       noremap = true,
@@ -341,7 +360,7 @@ function ctest:update_testcases()
   end
   vim.fn.setqflist({}, 'r', {title = "Test results", items = qf_items})
 
-  vim.api.nvim_set_option_value("readonly", true, {buf = self.buf})
+  vim.api.nvim_set_option_value("readonly", true, {buf = self.testcases_buf})
 end
 
 function ctest:update_results(result_filename)
@@ -363,7 +382,6 @@ function ctest:update_results(result_filename)
 end
 
 function ctest:refresh()
-  self.selected_preset = nil
   self:testcases()
 end
 
