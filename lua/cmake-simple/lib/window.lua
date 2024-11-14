@@ -35,7 +35,7 @@ local M = {
 
     vim.api.nvim_set_option_value('bufhidden', 'wipe', {buf = buf})
 
-    local opts = {style = "minimal", split = "right", win = 0, width = win_width}
+    local opts = {style = "minimal", split = "right", win = -1, width = win_width}
     local win = vim.api.nvim_open_win(buf, true, opts)
     vim.api.nvim_buf_set_lines(buf, -1, -1, true, {})
 
