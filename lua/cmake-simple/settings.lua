@@ -1,4 +1,4 @@
-local default_settings = {build_folder = "build", jobs = 2, dap_adapter = "gdb"}
+local default_settings = {build_folder = "build", jobs = 2, dap_adapter = "gdb", show_command_logs = true }
 
 local settings = {}
 

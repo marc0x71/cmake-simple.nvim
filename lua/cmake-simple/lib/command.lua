@@ -5,13 +5,14 @@ local writer_listener = require('cmake-simple.lib.listener.writer_listener')
 
 local command = {}
 
-function command:new(ops)
+function command:new(opts)
   local o = {
-    name = ops.name or "CMake",
-    command = ops.command or "cmake",
-    success_message = ops.success_message or "Done",
-    failure_message = ops.failure_message or "Failed",
-    log_filename = ops.log_filename or os.tmpname()
+    name = opts.name or "CMake",
+    command = opts.command or "cmake",
+    success_message = opts.success_message or "Done",
+    failure_message = opts.failure_message or "Failed",
+    log_filename = opts.log_filename or os.tmpname(),
+    show_log_window = opts.show_command_logs
   }
   setmetatable(o, self)
   self.__index = self
@@ -41,30 +42,21 @@ function command:_execute_task(args, on_progress, on_complete)
 end
 
 function command:execute(args, action, on_terminate)
-  local win_listener = windows_listener:new(action)
-  local ntf_listener = notification_listener:new(action)
-  local wrt_listener = writer_listener:new(self.log_filename)
+  local listeners = {notification_listener:new(action), writer_listener:new(self.log_filename)}
+  if self.show_log_window then vim.list_extend(listeners, {windows_listener:new(action)}) end
 
   local full_command = self.command .. " " .. table.concat(args, " ")
-  win_listener:update("start", full_command)
-  ntf_listener:update("start", full_command)
-  wrt_listener:update("start", full_command)
+  for _, listener in ipairs(listeners) do listener:update("start", full_command) end
 
   local on_progress = function(line_type, line)
-    win_listener:update(line_type, line)
-    ntf_listener:update(line_type, line)
-    wrt_listener:update(line_type, line)
+    for _, listener in ipairs(listeners) do listener:update(line_type, line) end
   end
 
   local on_complete = function(status)
     if (status == 0) then
-      win_listener:success()
-      ntf_listener:success()
-      wrt_listener:success()
+      for _, listener in ipairs(listeners) do listener:success() end
     else
-      win_listener:failure()
-      ntf_listener:failure()
-      wrt_listener:failure()
+      for _, listener in ipairs(listeners) do listener:failure() end
     end
     on_terminate(status)
   end
