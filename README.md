@@ -16,8 +16,7 @@ You also must have `cmake` and `ctest` installed on your local machine
 
 ## Installation
 
-You can use your preferred package manager, the following example is based on
-[`lazy.nvim`](https://github.com/folke/lazy.nvim):
+You can use your preferred package manager, the following example is based on [`lazy.nvim`](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
@@ -42,14 +41,16 @@ You can use your preferred package manager, the following example is based on
         build_folder = "build", 
         jobs = 2, 
         dap_adapter = "gdb",
-        clean_first = false
+        clean_first = false,
+        show_command_logs = false
     },
     keys = {
-      { '<leader>mc',  '<cmd>CMakeConfigure<cr>', desc = "Configure project" },
-      { '<leader>mb',  '<cmd>CMakeBuild<cr>',     desc = "Build project" },
-      { '<leader>mC',  '<cmd>CMakeClean<cr>',     desc = "Clean project" },
-      { '<leader>ml',  '<cmd>CMakeLog<cr>',       desc = "Show last log" },
-      { '<leader>mt',  '<cmd>CTestCases<cr>',     desc = "Show tests" }
+      { '<leader>mc',  '<cmd>CMakeConfigure<cr>',            desc = "Configure project" },
+      { '<leader>mb',  '<cmd>CMakeBuild<cr>',                desc = "Build project" },
+      { '<leader>mC',  '<cmd>CMakeClean<cr>',                desc = "Clean project" },
+      { '<leader>ml',  '<cmd>CMakeLog<cr>',                  desc = "Show last log" },
+      { '<leader>mt',  '<cmd>CTestCases<cr>',                desc = "Show tests" },
+      { '<leader>mL',  '<cmd>CMakeToogleCommandLog<cr>',     desc = "Toogle command log window" }
     }
 }
 ```
@@ -69,9 +70,11 @@ You can use your preferred package manager, the following example is based on
     -- Clean targets before build
     clean_first = false,
     -- Show always cmake command log window
-    show_command_logs = true
+    show_command_logs = false
 }
 ```
+
+You can overwrite using `setup` function or via `opts` if you are using [`lazy.nvim`](https://github.com/folke/lazy.nvim):
 
 ## Available Commands
 

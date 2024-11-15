@@ -21,8 +21,14 @@ function notification_listener:update(_, content)
   if perc ~= 100 then ntf.progress("CMake", self.action, perc) end
 end
 
-function notification_listener:success() ntf.progress_complete() end
+function notification_listener:success()
+  ntf.progress_complete()
+  ntf.notify(self.action .. " completed successfully", vim.log.levels.INFO)
+end
 
-function notification_listener:failure() ntf.progress_complete() end
+function notification_listener:failure()
+  ntf.progress_complete()
+  ntf.notify(self.action .. " failed", vim.log.levels.ERROR)
+end
 
 return notification_listener
