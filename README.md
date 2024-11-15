@@ -67,9 +67,23 @@ You can use your preferred package manager, the following example is based on
     -- The dap adapter used for debugging
     dap_adapter = "gdb",
     -- Clean targets before build
-    clean_first = false
+    clean_first = false,
+    -- Show always cmake command log window
+    show_command_logs = true
 }
 ```
+
+## Available Commands
+
+|Command|Description|
+|-|-|
+|CMakeInit|Initialize CMake project and reset selected presets. CMakeLists.txt *must be* present in he current folder. This command is executed automatically when current folder change|
+|CMakeConfigure|Execute `cmake` command to configure the project|
+|CMakeBuild|Execute `cmake` command to build the project|
+|CMakeClean|Execute `cmake` command to clean the project|
+|CMakeLog|Show last execution log|
+|CTestCases|Show found test cases (show next paragraph for available shortcuts)|
+|CMakeToogleCommandLog|Hide/Show log windows when `cmake` command is executed |
 
 ## CTest
 
