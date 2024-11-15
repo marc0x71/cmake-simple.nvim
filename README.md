@@ -95,6 +95,7 @@ Using `cmake-simple` you can easly execute test using the following keyboard sho
 - `l` - show last log of selected test
 - `<CR>` - go to the source code of selected test
 - `<F5>` - refresh testcases without changing selected test preset
+- `q` or `<ESC>` - close the testcases window
 
 Currently only for the following test framework is supported the "go-to" feature:
 
