@@ -46,7 +46,6 @@ local function orderedNext(t, state)
 
   -- no more value to return, cleanup
   t.__orderedIndex = nil
-  return
 end
 
 local M = {

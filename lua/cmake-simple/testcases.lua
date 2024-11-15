@@ -23,9 +23,6 @@ function testcases:load_testlist(json)
     self.test_list[test.name] = {name = test.name, command = test.command, cwd = cwd, status = 'unk', output = nil}
     if test.name:len() > self.max_name_len then self.max_name_len = test.name:len() end
   end
-  table.sort(self.test_list, function (a,b)
-    return a.name < b.name
-  end)
   self:_reset_summary()
   return next(self.test_list) ~= nil
 end
