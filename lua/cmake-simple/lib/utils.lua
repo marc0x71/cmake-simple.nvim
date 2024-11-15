@@ -8,6 +8,47 @@ local function _file_exists(name)
   end
 end
 
+--[[
+--http://lua-users.org/wiki/SortedIteration
+--
+Ordered table iterator, allow to iterate on the natural order of the keys of a
+table.
+
+Example:
+]]
+
+local function __genOrderedIndex(t)
+  local orderedIndex = {}
+  for key in pairs(t) do table.insert(orderedIndex, key) end
+  table.sort(orderedIndex)
+  return orderedIndex
+end
+
+local function orderedNext(t, state)
+  -- Equivalent of the next function, but returns the keys in the alphabetic
+  -- order. We use a temporary ordered key table that is stored in the
+  -- table being iterated.
+
+  local key = nil
+  -- print("orderedNext: state = "..tostring(state) )
+  if state == nil then
+    -- the first time, generate the index
+    t.__orderedIndex = __genOrderedIndex(t)
+    key = t.__orderedIndex[1]
+  else
+    -- fetch the next value
+    for i = 1, vim.tbl_count(t.__orderedIndex) do
+      if t.__orderedIndex[i] == state then key = t.__orderedIndex[i + 1] end
+    end
+  end
+
+  if key then return key, t[key] end
+
+  -- no more value to return, cleanup
+  t.__orderedIndex = nil
+  return
+end
+
 local M = {
   file_exists = function(name) return _file_exists(name) end,
 
@@ -56,6 +97,11 @@ local M = {
     return (s:gsub("^%s*(.-)%s*$", "%1"))
   end,
 
+  orderedPairs = function(t)
+    -- Equivalent of the pairs() function on tables. Allows to iterate
+    -- in order
+    return orderedNext, t, nil
+  end
 }
 
 return M

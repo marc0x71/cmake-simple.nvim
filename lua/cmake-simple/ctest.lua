@@ -344,7 +344,7 @@ function ctest:update_testcases()
 
   local qf_items = {}
 
-  for k, v in pairs(self.test_cases.test_list) do
+  for k, v in utils.orderedPairs(self.test_cases.test_list) do
     local icon = icons.unknown
     if v["status"] == "run" then
       icon = icons.ok
