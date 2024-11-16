@@ -1,7 +1,7 @@
 # cmake-simple.nvim
 Simple NeoVim plugin for CMake/CTest integration
 
-![alt text](https://github.com/marc0x71/cmake-simple.nvim/blob/main/images/cmake-simple-screenshot.png?raw=true)
+![Screenshot](https://github.com/marc0x71/cmake-simple.nvim/blob/main/images/cmake-simple-screenshot.png?raw=true)
 
 
 ## Motivation
@@ -110,6 +110,36 @@ Currently only for the following test framework is supported the "go-to" feature
 
 - [`GTest`](https://github.com/google/googletest)
 - [`Catch2`](https://github.com/catchorg/Catch2)
+
+## Status line
+
+If you are using ['lualine.nvim'](https://github.com/nvim-lualine/lualine.nvim) you can add an indicator 
+that will show if the project has been build or not, for example:
+
+![Status line example](https://github.com/marc0x71/cmake-simple.nvim/blob/main/images/statusbar.png?raw=true)
+
+```lua
+return {
+    'nvim-lualine/lualine.nvim',
+    dependencies = {'nvim-tree/nvim-web-devicons'},
+    config = function()
+        ...
+        local cmakesimple = require 'cmake-simple'
+        require('lualine').setup({
+            ...
+            sections = {
+                lualine_x = {
+                    {
+                        cmakesimple.build_status,
+                        cond = cmakesimple.build_status_available
+                    }
+                }
+            }
+            ...
+        })
+    end
+}
+```
 
 ## Troubleshooting
 

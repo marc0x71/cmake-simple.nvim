@@ -4,6 +4,12 @@ local window = require('cmake-simple.lib.window')
 
 local cmake = {}
 
+local build_states = {
+  running = '',
+  success = '󰗠',
+  failed = '󰅙',
+  unknown = ''
+}
 function cmake:new(opts, log_filename)
 
   local o = {
@@ -12,7 +18,8 @@ function cmake:new(opts, log_filename)
     selected_preset = {configure = nil, build = nil, test = nil},
     running = false,
     opts = opts,
-    log_filename = log_filename
+    log_filename = log_filename,
+    build_status = build_states.unknown
   }
   setmetatable(o, self)
   self.__index = self
@@ -40,6 +47,11 @@ end
 
 function cmake:_on_command_exit(status)
   self.running = false
+  if status == 0 then
+  self.build_status = build_states.success
+  else
+  self.build_status = build_states.failed
+  end
   if status ~= 0 and not self.opts:get().show_command_logs then self:show_log() end
 end
 
@@ -81,6 +93,7 @@ function cmake:build_from_preset()
   if self.opts:get().clean_first then args = vim.list_extend(args, {'--clean-first'}) end
   if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
   self.running = true
+  self.build_status = build_states.running
   cmd:execute(args, "Build using preset " .. preset_name, function(status) self:_on_command_exit(status) end)
 end
 
@@ -100,6 +113,7 @@ function cmake:build()
   if self.opts:get().clean_first then args = vim.list_extend(args, {'--clean-first'}) end
   if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
   self.running = true
+  self.build_status = build_states.running
   local cmd = command:new({log_filename = self.log_filename, show_command_logs = self.opts:get().show_command_logs})
   cmd:execute(args, "Build", function(status) self:_on_command_exit(status) end)
 end

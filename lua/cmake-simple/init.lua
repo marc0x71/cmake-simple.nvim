@@ -88,6 +88,10 @@ M.testcases = function() require("cmake-simple.app").get():testcases() end
 
 M.check_auto_build = function() require("cmake-simple.app").get():check_auto_build() end
 
+M.build_status = function() return "CMake " .. require("cmake-simple.app").get():build_status() end
+
+M.build_status_available = function() return require("cmake-simple.app").get():build_status_available() end
+
 _init_commands()
 
 return M

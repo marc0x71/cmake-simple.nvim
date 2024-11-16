@@ -58,5 +58,15 @@ function M:check_auto_build() if _cmakefiles_exists() then self.cmake_instance:c
 
 function M:testcases() if _cmakefiles_exists(true) then self.ctest_instance:testcases() end end
 
+function M:build_status()
+  if _cmakefiles_exists(true) then
+    return self.cmake_instance.build_status
+  else
+    return ""
+  end
+end
+
+function M:build_status_available() return _cmakefiles_exists(true) end
+
 return M
 
