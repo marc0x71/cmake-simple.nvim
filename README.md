@@ -1,6 +1,9 @@
 # cmake-simple.nvim
 Simple NeoVim plugin for CMake/CTest integration
 
+![alt text](https://github.com/marc0x71/cmake-simple.nvim/blob/main/images/cmake-simple-screenshot.png?raw=true)
+
+
 ## Motivation
 If you are looking for a simple solution to run CMake/CTest commands without opening a new terminal and also run tests in debug (with `nvim-dap`), this plugin might be for you! 😎
 
