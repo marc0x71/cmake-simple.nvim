@@ -42,7 +42,8 @@ You can use your preferred package manager, the following example is based on [`
         jobs = 2, 
         dap_adapter = "gdb",
         clean_first = false,
-        show_command_logs = false
+        show_command_logs = false,
+        auto_build = false
     },
     keys = {
       { '<leader>mc',  '<cmd>CMakeConfigure<cr>',            desc = "Configure project" },
@@ -70,7 +71,9 @@ You can use your preferred package manager, the following example is based on [`
     -- Clean targets before build
     clean_first = false,
     -- Show always cmake command log window
-    show_command_logs = false
+    show_command_logs = false,
+    -- Automatically build project if a source file has been changed
+    auto_build = false
 }
 ```
 

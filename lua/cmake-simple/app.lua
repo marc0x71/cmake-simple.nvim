@@ -5,9 +5,10 @@ local notification = require('cmake-simple.lib.notification')
 local M = {}
 local instance = nil
 
-local function _cmakefiles_exists()
+local function _cmakefiles_exists(silent)
+  silent = silent or false
   if not utils.file_exists("CMakeLists.txt") then
-    notification.notify("Initialization not completed", vim.log.levels.ERROR)
+    if not silent then notification.notify("Initialization not completed", vim.log.levels.ERROR) end
     return false
   end
   return true
@@ -53,7 +54,9 @@ function M:clean() if _cmakefiles_exists() then self.cmake_instance:clean() end 
 
 function M:show_log() if _cmakefiles_exists() then self.cmake_instance:show_log() end end
 
-function M:testcases() if _cmakefiles_exists() then self.ctest_instance:testcases() end end
+function M:check_auto_build() if _cmakefiles_exists() then self.cmake_instance:check_auto_build() end end
+
+function M:testcases() if _cmakefiles_exists(true) then self.ctest_instance:testcases() end end
 
 return M
 

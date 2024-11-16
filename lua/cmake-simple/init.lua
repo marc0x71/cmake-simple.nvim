@@ -5,7 +5,13 @@ local function _init_commands()
   local cmake_simple_augroup = vim.api.nvim_create_augroup("cmakesimpleaugroup", {clear = true})
 
   vim.api.nvim_create_autocmd({"VimEnter", "DirChanged"}, {
-    callback = function(ev) require('cmake-simple').initialize() end,
+    callback = function(_) require('cmake-simple').initialize() end,
+    group = cmake_simple_augroup
+  })
+
+  vim.api.nvim_create_autocmd({"BufWritePost"}, {
+    pattern = {"*.c", "*.h", "*.cc", "*.cpp", "*.C", "*.hpp", "*.jnl"},
+    callback = function(_) require('cmake-simple').check_auto_build() end,
     group = cmake_simple_augroup
   })
 
@@ -75,10 +81,12 @@ M.toogle_command_log = function()
   else
     notification.notify("Disabled command log", vim.log.levels.INFO)
   end
-  require("cmake-simple.app").get():update({show_command_logs = show })
+  require("cmake-simple.app").get():update({show_command_logs = show})
 end
 
 M.testcases = function() require("cmake-simple.app").get():testcases() end
+
+M.check_auto_build = function() require("cmake-simple.app").get():check_auto_build() end
 
 _init_commands()
 

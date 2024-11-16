@@ -39,7 +39,7 @@ function cmake:load_presets()
 end
 
 function cmake:_on_command_exit(status)
-  self.running = false;
+  self.running = false
   if status ~= 0 and not self.opts:get().show_command_logs then self:show_log() end
 end
 
@@ -114,7 +114,7 @@ end
 
 function cmake:clean()
   if self.running then
-    notification.notify("CMake already running", "warn")
+    notification.notify("CMake already running", vim.log.levels.WARN)
     return
   end
   if next(self.preset_list["build"]) ~= nil then
@@ -142,6 +142,16 @@ function cmake:show_log()
   vim.api.nvim_set_option_value("readonly", true, {buf = buf})
   vim.api.nvim_set_option_value("modified", false, {buf = buf})
 
+end
+
+function cmake:check_auto_build()
+  if not self.opts:get().auto_build or self.running then return end
+  if next(self.preset_list["build"]) == nil or self.selected_preset["build"] ~= nil then
+    self:build()
+  else
+    -- only if there is no user interaction the auto_build is enabled
+    notification.notify("CMake auto build skipped", vim.log.levels.INFO)
+  end
 end
 
 return cmake

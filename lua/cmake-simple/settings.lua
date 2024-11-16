@@ -1,4 +1,10 @@
-local default_settings = {build_folder = "build", jobs = 2, dap_adapter = "gdb", show_command_logs = false }
+local default_settings = {
+  build_folder = "build",
+  jobs = 2,
+  dap_adapter = "gdb",
+  show_command_logs = false,
+  auto_build = false
+}
 
 local settings = {}
 
@@ -9,13 +15,9 @@ function settings:new()
   return o
 end
 
-function settings:update(opts)
-    self.inner = vim.tbl_deep_extend("force", self.inner, opts or {})
-end
+function settings:update(opts) self.inner = vim.tbl_deep_extend("force", self.inner, opts or {}) end
 
-function settings:get()
-    return self.inner
-end
+function settings:get() return self.inner end
 
 return settings
 
