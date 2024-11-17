@@ -131,11 +131,9 @@ function ctest:search_test_folders()
 end
 
 function ctest:_get_selected()
-  local r, _ = unpack(vim.api.nvim_win_get_cursor(0))
-  self.last_position = r
-  local row = r - 4;
-  if row < 0 then return nil end
-  return self.test_cases:get_by_index(row)
+  local content = vim.api.nvim_get_current_line()
+  local name = content:gsub("[^%s]*%s", "")
+  return name, self.test_cases.test_list[name]
 end
 
 function ctest:goto_test()
@@ -344,7 +342,10 @@ function ctest:update_testcases()
 
   local qf_items = {}
 
-  for k, v in utils.orderedPairs(self.test_cases.test_list) do
+  for _, k in pairs(utils.orderedPairs(self.test_cases.test_list)) do
+    local v = self.test_cases.test_list[k]
+    print(k)
+    P(v)
     local icon = icons.unknown
     if v["status"] == "run" then
       icon = icons.ok
@@ -381,8 +382,6 @@ function ctest:update_results(result_filename)
   self:update_testcases()
 end
 
-function ctest:refresh()
-  self:testcases()
-end
+function ctest:refresh() self:testcases() end
 
 return ctest
