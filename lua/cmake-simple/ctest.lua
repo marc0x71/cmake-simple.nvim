@@ -131,6 +131,10 @@ function ctest:search_test_folders()
 end
 
 function ctest:_get_selected()
+  local r, _ = unpack(vim.api.nvim_win_get_cursor(0))
+  self.last_position = r
+  local row = r - 4;
+  if row < 0 then return nil end
   local content = vim.api.nvim_get_current_line()
   local name = content:gsub("[^%s]*%s", "")
   return name, self.test_cases.test_list[name]
