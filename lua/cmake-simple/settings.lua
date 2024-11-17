@@ -2,6 +2,7 @@ local default_settings = {
   build_folder = "build",
   jobs = 2,
   dap_adapter = "gdb",
+  clean_first = false,
   show_command_logs = false,
   auto_build = false
 }
