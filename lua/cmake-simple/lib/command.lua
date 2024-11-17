@@ -12,7 +12,8 @@ function command:new(opts)
     success_message = opts.success_message or "Done",
     failure_message = opts.failure_message or "Failed",
     log_filename = opts.log_filename or os.tmpname(),
-    show_log_window = opts.show_command_logs
+    show_log_window = opts.show_command_logs,
+    silent_mode = opts.silent_mode
   }
   setmetatable(o, self)
   self.__index = self
@@ -42,7 +43,8 @@ function command:_execute_task(args, on_progress, on_complete)
 end
 
 function command:execute(args, action, on_terminate)
-  local listeners = {notification_listener:new(action), writer_listener:new(self.log_filename)}
+  local listeners = {writer_listener:new(self.log_filename)}
+  if not self.silent_mode then vim.list_extend(listeners, {notification_listener:new(action)}) end
   if self.show_log_window then vim.list_extend(listeners, {windows_listener:new(action)}) end
 
   local full_command = self.command .. " " .. table.concat(args, " ")

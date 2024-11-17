@@ -68,5 +68,9 @@ end
 
 function M:build_status_available() return _cmakefiles_exists(true) end
 
+function M:run_target() if _cmakefiles_exists() then self.cmake_instance:run_target() end end
+
+function M:debug_target() if _cmakefiles_exists() then self.cmake_instance:debug_target() end end
+
 return M
 

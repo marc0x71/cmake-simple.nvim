@@ -1,17 +1,15 @@
 local command = require("cmake-simple.lib.command")
 local notification = require('cmake-simple.lib.notification')
 local window = require('cmake-simple.lib.window')
-
+local utils = require('cmake-simple.lib.utils')
+local fileapi = require("cmake-simple.fileapi")
+local ntf = require('cmake-simple.lib.notification')
+local dap = require("dap")
 local cmake = {}
 
-local build_states = {
-  running = '',
-  success = '󰗠',
-  failed = '󰅙',
-  unknown = ''
-}
-function cmake:new(opts, log_filename)
+local build_states = {running = '', success = '󰗠', failed = '󰅙', unknown = ''}
 
+function cmake:new(opts, log_filename)
   local o = {
     cwd = ".",
     preset_list = {configure = {}, build = {}, test = {}},
@@ -19,7 +17,9 @@ function cmake:new(opts, log_filename)
     running = false,
     opts = opts,
     log_filename = log_filename,
-    build_status = build_states.unknown
+    build_status = build_states.unknown,
+    build_path = opts:get().build_folder,
+    fileapi = nil
   }
   setmetatable(o, self)
   self.__index = self
@@ -45,12 +45,15 @@ function cmake:load_presets()
   end
 end
 
-function cmake:_on_command_exit(status)
+function cmake:_on_command_exit(status, update_targets)
+  update_targets = update_targets or false
   self.running = false
   if status == 0 then
-  self.build_status = build_states.success
+    self.build_status = build_states.success
+    self:_update_build_folder()
+    if update_targets then self.fileapi:update() end
   else
-  self.build_status = build_states.failed
+    self.build_status = build_states.failed
   end
   if status ~= 0 and not self.opts:get().show_command_logs then self:show_log() end
 end
@@ -63,15 +66,35 @@ function cmake:get_preset(name)
   return self.selected_preset[name]
 end
 
-function cmake:configure_from_preset()
-  local cmd = command:new({log_filename = self.log_filename, show_command_logs = self.opts:get().show_command_logs})
+function cmake:_update_build_folder()
+  for line in io.lines(self.log_filename) do
+    if line:find("Build files have been written to") then
+      local path = line:match("[^:]*:%s(.*)")
+      if self.build_path ~= path then
+        self.build_path = path
+        self.fileapi = fileapi:new({path = self.build_path})
+        self.fileapi:init_model()
+        self:configure(true)
+      end
+    end
+  end
+end
+
+function cmake:configure_from_preset(silent_mode)
+  silent_mode = silent_mode or false
+  local cmd = command:new({
+    log_filename = self.log_filename,
+    show_command_logs = self.opts:get().show_command_logs,
+    silent_mode = silent_mode
+  })
   local preset_name = self:get_preset("configure")
   local args = {"--preset", preset_name}
   self.running = true
-  cmd:execute(args, "Configure using preset " .. preset_name, function(status) self:_on_command_exit(status) end)
+  cmd:execute(args, "Configure using preset " .. preset_name, function(status) self:_on_command_exit(status, true); end)
 end
 
-function cmake:configure()
+function cmake:configure(silent_mode)
+  silent_mode = silent_mode or false
   if self.running then
     notification.notify("CMake already running", "warn")
     return
@@ -80,10 +103,14 @@ function cmake:configure()
     self:configure_from_preset()
     return
   end
-  local cmd = command:new({log_filename = self.log_filename, show_command_logs = self.opts:get().show_command_logs})
+  local cmd = command:new({
+    log_filename = self.log_filename,
+    show_command_logs = self.opts:get().show_command_logs,
+    silent_mode = silent_mode
+  })
   local args = {"-S", self.cwd, "-B", self.opts:get().build_folder}
   self.running = true
-  cmd:execute(args, "Configure", function(status) self:_on_command_exit(status) end)
+  cmd:execute(args, "Configure", function(status) self:_on_command_exit(status, true) end)
 end
 
 function cmake:build_from_preset()
@@ -166,6 +193,42 @@ function cmake:check_auto_build()
     -- only if there is no user interaction the auto_build is enabled
     notification.notify("CMake auto build skipped", vim.log.levels.INFO)
   end
+end
+
+function cmake:debug_target()
+  if self.fileapi == nil then
+    notification.notify("Missing target configuration, please execute CMakeConfigure first", vim.log.levels.WARN)
+    return
+  end
+  utils.select_from_list("Select target to run", self.fileapi:target_names(), function(name)
+    if name == nil then return end
+    local target = self.fileapi.targets[name]
+
+    ntf.notify("Debug " .. name, vim.log.levels.INFO)
+
+    local dap_config = {
+      args = {},
+      cwd = vim.uv.cwd(),
+      program = target.artifact,
+      request = "launch",
+      name = "Debug " .. name,
+      type = self.opts:get().dap_adapter
+    }
+
+    dap.run(dap_config)
+  end)
+end
+
+function cmake:run_target()
+  if self.fileapi == nil then
+    notification.notify("Missing target configuration, please execute CMakeConfigure first", vim.log.levels.WARN)
+    return
+  end
+  utils.select_from_list("Select target to run", self.fileapi:target_names(), function(name)
+    if name == nil then return end
+    local target = self.fileapi.targets[name]
+    vim.cmd("!" .. target.artifact)
+  end)
 end
 
 return cmake

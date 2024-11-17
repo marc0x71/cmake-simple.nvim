@@ -15,21 +15,34 @@ local function _sortedKeys(query, sortFunction)
   return keys
 end
 
+local function _read_all(filename)
+  local f = io.open(filename, "r")
+  if f == nil then return nil end
+  local content = f:read("*a")
+  f:close()
+  return content
+end
+
 local M = {
   file_exists = function(name) return _file_exists(name) end,
+
+  create_file = function(name, content)
+    content = content or ''
+    local f = io.open(name, "w")
+    if not f then return false end
+    f:write(content)
+    f:close()
+    return true
+  end,
 
   get_path = function(path, sep)
     sep = sep or '/'
     return path:match("(.*" .. sep .. ")")
   end,
 
-  read_all = function(filename)
-    local f = io.open(filename, "r")
-    if f == nil then return nil end
-    local content = f:read("*a")
-    f:close()
-    return content
-  end,
+  read_all = function(filename) return _read_all(filename) end,
+
+  read_json_file = function(filename) return vim.json.decode(_read_all(filename) or "{}", {}) end,
 
   buf_append_colorized = function(buf, content, content_type)
     vim.api.nvim_buf_set_lines(buf, -1, -1, true, {content})
@@ -63,7 +76,43 @@ local M = {
     return (s:gsub("^%s*(.-)%s*$", "%1"))
   end,
 
-  orderedPairs = function(t) return _sortedKeys(t) end
+  orderedPairs = function(t) return _sortedKeys(t) end,
+
+  select_from_list = function(title, list, callback, opts)
+    local action_state = require("telescope.actions.state")
+    local actions = require("telescope.actions")
+    local conf = require("telescope.config").values
+    local finders = require("telescope.finders")
+    local pickers = require("telescope.pickers")
+
+    opts = opts or {}
+
+    pickers.new(opts, {
+      prompt_title = title,
+      finder = finders.new_table({results = list}),
+      layout_config = {
+          width = function(_, max_columns)
+            local percentage = 0.5
+            local max = 50
+            return math.min(math.floor(percentage * max_columns), max)
+          end,
+          height = function(_, _, max_lines)
+            local percentage = 0.3
+            local min = 15
+            return math.max(math.floor(percentage * max_lines), min)
+          end
+      },
+      sorter = conf.generic_sorter(opts),
+      attach_mappings = function(prompt_bufnr, _)
+        actions.select_default:replace(function()
+          actions.close(prompt_bufnr)
+          local selection = action_state.get_selected_entry()
+          callback(selection[1])
+        end)
+        return true
+      end
+    }):find()
+  end
 }
 
 return M

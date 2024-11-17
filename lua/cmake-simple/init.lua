@@ -46,6 +46,18 @@ local function _init_commands()
     desc = "CMake show last log"
   })
 
+  vim.api.nvim_create_user_command("CMakeRun", function() require('cmake-simple').run_target() end, { -- opts
+    nargs = "*",
+    bang = true,
+    desc = "CMake run target"
+  })
+
+  vim.api.nvim_create_user_command("CMakeDebug", function() require('cmake-simple').debug_target() end, { -- opts
+    nargs = "*",
+    bang = true,
+    desc = "CMake run target in Debug"
+  })
+
   vim.api.nvim_create_user_command("CMakeToogleCommandLog", function() require('cmake-simple').toogle_command_log() end,
                                    { -- opts
     nargs = "*",
@@ -91,6 +103,9 @@ M.check_auto_build = function() require("cmake-simple.app").get():check_auto_bui
 M.build_status = function() return "CMake " .. require("cmake-simple.app").get():build_status() end
 
 M.build_status_available = function() return require("cmake-simple.app").get():build_status_available() end
+
+M.run_target = function() return require("cmake-simple.app").get():run_target() end
+M.debug_target = function() return require("cmake-simple.app").get():debug_target() end
 
 _init_commands()
 
