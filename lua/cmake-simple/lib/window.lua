@@ -25,6 +25,9 @@ local M = {
 
     local win = vim.api.nvim_open_win(buf, true, opts)
 
+    vim.api.nvim_set_option_value("readonly", true, {buf = buf})
+    vim.api.nvim_set_option_value("modifiable", false, {buf = buf})
+
     return buf, win
   end,
 
@@ -38,6 +41,9 @@ local M = {
     local opts = {style = "minimal", split = "right", win = -1, width = win_width}
     local win = vim.api.nvim_open_win(buf, true, opts)
     vim.api.nvim_buf_set_lines(buf, -1, -1, true, {})
+
+    vim.api.nvim_set_option_value("readonly", true, {buf = buf})
+    vim.api.nvim_set_option_value("modifiable", false, {buf = buf})
 
     return buf, win
   end

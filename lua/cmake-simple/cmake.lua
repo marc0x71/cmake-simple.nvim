@@ -186,9 +186,11 @@ function cmake:show_log()
     vim.api.nvim_buf_set_keymap(buf, 'n', key, '<cmd>close<cr>', {nowait = true, noremap = true, silent = true})
   end
 
+  vim.api.nvim_set_option_value("readonly", false, {buf = buf})
+  vim.api.nvim_set_option_value("modifiable", true, {buf = buf})
   vim.api.nvim_command("$read" .. self.log_filename)
   vim.api.nvim_set_option_value("readonly", true, {buf = buf})
-  vim.api.nvim_set_option_value("modified", false, {buf = buf})
+  vim.api.nvim_set_option_value("modifiable", false, {buf = buf})
 
 end
 

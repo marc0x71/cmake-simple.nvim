@@ -216,7 +216,7 @@ function ctest:test_log(name, detail)
   vim.api.nvim_buf_set_lines(buf, -1, -1, true, lines)
 
   vim.api.nvim_set_option_value("readonly", true, {buf = buf})
-  vim.api.nvim_set_option_value("modified", false, {buf = buf})
+  vim.api.nvim_set_option_value("modifiable", false, {buf = buf})
 end
 
 function ctest:run_test(name, _)
@@ -327,13 +327,15 @@ function ctest:_create_win_testcases()
     self.testcases_buf = buf
     self.testcases_win = win
 
-    vim.api.nvim_set_option_value("modified", false, {buf = self.testcases_buf})
     vim.api.nvim_set_option_value("bufhidden", "wipe", {buf = self.testcases_buf})
+    vim.api.nvim_set_option_value("modifiable", false, {buf = self.testcases_buf})
     vim.api.nvim_set_option_value("readonly", true, {buf = self.testcases_buf})
   else
     vim.api.nvim_set_option_value("readonly", false, {buf = self.testcases_buf})
+    vim.api.nvim_set_option_value("modifiable", true, {buf = self.testcases_buf})
     vim.api.nvim_buf_set_lines(self.testcases_buf, 0, -1, false, {})
     vim.api.nvim_set_option_value("readonly", true, {buf = self.testcases_buf})
+    vim.api.nvim_set_option_value("modifiable", false, {buf = self.testcases_buf})
   end
   return self.testcases_buf
 end
@@ -341,7 +343,8 @@ end
 function ctest:update_testcases()
   self:_create_win_testcases()
 
-  vim.api.nvim_set_option_value("readonly", false, {buf = self.buf})
+  vim.api.nvim_set_option_value("readonly", false, {buf = self.testcases_buf})
+  vim.api.nvim_set_option_value("modifiable", true, {buf = self.testcases_buf})
 
   vim.api.nvim_buf_set_lines(self.testcases_buf, 0, -1, true, {"Testcases", ""})
   vim.api.nvim_buf_add_highlight(self.testcases_buf, -1, "Title", 0, 0, 100)
@@ -363,8 +366,6 @@ function ctest:update_testcases()
 
   for _, k in pairs(utils.orderedPairs(self.test_cases.test_list)) do
     local v = self.test_cases.test_list[k]
-    print(k)
-    P(v)
     local icon = icons.unknown
     if v["status"] == "run" then
       icon = icons.ok
@@ -381,6 +382,7 @@ function ctest:update_testcases()
   vim.fn.setqflist({}, 'r', {title = "Test results", items = qf_items})
 
   vim.api.nvim_set_option_value("readonly", true, {buf = self.testcases_buf})
+  vim.api.nvim_set_option_value("modifiable", false, {buf = self.testcases_buf})
 end
 
 function ctest:update_results(result_filename)
