@@ -47,6 +47,29 @@ function ctest:load_presets()
   end
 end
 
+function ctest:get_preset(callback)
+  if self.selected_preset == nil then
+    utils.select_from_list("Select preset", self.preset_list, function(select)
+      self.selected_preset = select
+      callback(select)
+    end)
+  else
+    callback(self.selected_preset)
+  end
+end
+
+function ctest:_load_json_testcases(cmd)
+  local result = vim.system(cmd, {text = true}):wait()
+  if result.code == 0 then
+    local json = vim.json.decode(result.stdout)
+    if self.test_cases:load_testlist(json) then self:search_test_files() end
+  end
+  if result.code ~= 0 or not self.test_cases:has_tests() then
+    ntf.notify("Failed to retrieve test list", vim.log.levels.ERROR)
+    return
+  end
+end
+
 function ctest:testcases()
   self:search_test_folders()
   if self.test_dir == nil or next(self.test_folders) == nil then
@@ -56,20 +79,12 @@ function ctest:testcases()
 
   local cmd = {"ctest", "--show-only=json-v1", "--test-dir", self.test_dir}
   if next(self.preset_list) ~= nil then
-    if self.selected_preset == nil then
-      vim.ui.select(self.preset_list, {prompt = "Select preset"}, function(select) self.selected_preset = select end)
-    end
-    vim.list_extend(cmd, {'--preset', self.selected_preset})
-  end
-
-  local result = vim.system(cmd, {text = true}):wait()
-  if result.code == 0 then
-    local json = vim.json.decode(result.stdout)
-    if self.test_cases:load_testlist(json) then self:search_test_files() end
-  end
-  if result.code ~= 0 or not self.test_cases:has_tests() then
-    ntf.notify("Failed to retrieve test list", vim.log.levels.ERROR)
-    return
+    self:get_preset(function(select)
+      vim.list_extend(cmd, {'--preset', select})
+      self:_load_json_testcases(cmd)
+    end)
+  else
+    self:_load_json_testcases(cmd)
   end
 
 end

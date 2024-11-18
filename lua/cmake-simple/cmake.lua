@@ -58,12 +58,15 @@ function cmake:_on_command_exit(status, update_targets)
   if status ~= 0 and not self.opts:get().show_command_logs then self:show_log() end
 end
 
-function cmake:get_preset(name)
+function cmake:get_preset(name, callback)
   if self.selected_preset[name] == nil then
-    vim.ui.select(self.preset_list[name], {prompt = "Select configuration preset"},
-                  function(select) self.selected_preset[name] = select end)
+    utils.select_from_list("Select preset", self.preset_list[name], function(select)
+      self.selected_preset[name] = select
+      callback(select)
+    end)
+  else
+    callback(self.selected_preset[name])
   end
-  return self.selected_preset[name]
 end
 
 function cmake:_update_build_folder()
@@ -87,10 +90,12 @@ function cmake:configure_from_preset(silent_mode)
     show_command_logs = self.opts:get().show_command_logs,
     silent_mode = silent_mode
   })
-  local preset_name = self:get_preset("configure")
-  local args = {"--preset", preset_name}
-  self.running = true
-  cmd:execute(args, "Configure using preset " .. preset_name, function(status) self:_on_command_exit(status, true); end)
+  self:get_preset("configure", function(preset_name)
+    local args = {"--preset", preset_name}
+    self.running = true
+    cmd:execute(args, "Configure using preset " .. preset_name,
+                function(status) self:_on_command_exit(status, true); end)
+  end)
 end
 
 function cmake:configure(silent_mode)
@@ -115,13 +120,14 @@ end
 
 function cmake:build_from_preset()
   local cmd = command:new({log_filename = self.log_filename, show_command_logs = self.opts:get().show_command_logs})
-  local preset_name = self:get_preset("build")
-  local args = {"--build", "--preset", preset_name}
-  if self.opts:get().clean_first then args = vim.list_extend(args, {'--clean-first'}) end
-  if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
-  self.running = true
-  self.build_status = build_states.running
-  cmd:execute(args, "Build using preset " .. preset_name, function(status) self:_on_command_exit(status) end)
+  self:get_preset("build", function(preset_name)
+    local args = {"--build", "--preset", preset_name}
+    if self.opts:get().clean_first then args = vim.list_extend(args, {'--clean-first'}) end
+    if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
+    self.running = true
+    self.build_status = build_states.running
+    cmd:execute(args, "Build using preset " .. preset_name, function(status) self:_on_command_exit(status) end)
+  end)
 end
 
 function cmake:build()
@@ -146,11 +152,12 @@ function cmake:build()
 end
 
 function cmake:clean_from_preset()
-  local preset_name = self:get_preset("build")
-  local args = {"--build", "--preset", preset_name, "--target", "clean"}
-  local cmd = command:new({log_filename = self.log_filename, show_command_logs = self.opts:get().show_command_logs})
-  self.running = true
-  cmd:execute(args, "Clean using preset " .. preset_name, function(status) self:_on_command_exit(status) end)
+  self:get_preset("build", function(preset_name)
+    local args = {"--build", "--preset", preset_name, "--target", "clean"}
+    local cmd = command:new({log_filename = self.log_filename, show_command_logs = self.opts:get().show_command_logs})
+    self.running = true
+    cmd:execute(args, "Clean using preset " .. preset_name, function(status) self:_on_command_exit(status) end)
+  end)
 end
 
 function cmake:clean()

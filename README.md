@@ -16,6 +16,7 @@ This plugin requires:
 - [`fidget.nvim`](https://github.com/j-hui/fidget.nvim) to show notification messages and execution progress.
 - [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) for debugging targets and tests
 - [`treesitter`](https://github.com/nvim-treesitter/nvim-treesitter) for tests source code analysis
+- [`telescope`](https://github.com/nvim-telescope/telescope.nvim) used for UI selections
 
 You also must have `cmake` and `ctest` installed on your local machine
 
