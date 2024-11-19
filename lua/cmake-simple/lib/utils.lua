@@ -112,6 +112,12 @@ local M = {
         return true
       end
     }):find()
+  end,
+
+  split = function(str, sep)
+    local lines = {}
+    for s in str:gmatch("[^" .. sep .. "]+") do table.insert(lines, s) end
+    return lines
   end
 }
 

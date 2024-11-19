@@ -76,11 +76,20 @@ local function _init_commands()
     bang = true,
     desc = "Run all CTest testcases"
   })
+
+  vim.api.nvim_create_user_command("CMakeSettings", function() require('cmake-simple').settings() end, { -- opts
+    nargs = "*",
+    bang = true,
+    desc = "Change CMakeSimple settings"
+  })
 end
 
 local M = {}
 
-M.setup = function(opts) require("cmake-simple.app").get():update(opts) end
+M.setup = function(opts)
+  local cfg = require("cmake-simple.lib.config")
+  require("cmake-simple.app").get():update(cfg.get_config(opts))
+end
 
 M.initialize = function() require("cmake-simple.app").get():initialize() end
 
@@ -113,7 +122,14 @@ M.build_status = function() return "CMake " .. require("cmake-simple.app").get()
 M.build_status_available = function() return require("cmake-simple.app").get():build_status_available() end
 
 M.run_target = function() return require("cmake-simple.app").get():run_target() end
+
 M.debug_target = function() return require("cmake-simple.app").get():debug_target() end
+
+M.settings = function()
+  local current_opts = require('cmake-simple.app').get().opts.inner
+  local cfg = require("cmake-simple.lib.config")
+  cfg.show_config(current_opts, function(opts) require("cmake-simple.app").get():update(opts) end)
+end
 
 _init_commands()
 

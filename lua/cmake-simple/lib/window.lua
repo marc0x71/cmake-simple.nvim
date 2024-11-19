@@ -1,3 +1,5 @@
+local popup = require("plenary.popup")
+
 local M = {
   centered_window = function()
     local buf = vim.api.nvim_create_buf(false, true)
@@ -46,6 +48,22 @@ local M = {
     vim.api.nvim_set_option_value("modifiable", false, {buf = buf})
 
     return buf, win
+  end,
+
+  popup = function(title, width, height)
+    width = width or 50
+    height = height or 12
+    local buf = vim.api.nvim_create_buf(false, false)
+
+    local win, win_opt = popup.create(buf, {
+      title = title,
+      line = math.floor(((vim.o.lines - height) / 2) - 1),
+      col = math.floor((vim.o.columns - width) / 2),
+      minwidth = width,
+      minheight = height,
+      borderchars = {"─", "│", "─", "│", "╭", "╮", "╯", "╰"}
+    })
+    return buf, win, win_opt
   end
 }
 

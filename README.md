@@ -3,11 +3,20 @@ Simple NeoVim plugin for CMake/CTest integration
 
 ![Screenshot](https://github.com/marc0x71/cmake-simple.nvim/blob/main/images/cmake-simple-screenshot.png?raw=true)
 
-
 ## Motivation
 If you are looking for a simple solution to run CMake/CTest commands without opening a new terminal and also run targets and tests in debug (with `nvim-dap`), this plugin might be for you! 😎
 
 It's **simple** to make life **simple**, and it's useful enough to make it essential 😀
+
+## Description
+
+`CMakeSimple` is a NeoVim plugin that will allow you (easily) to manage your workflow with CMake and CTest directly from your **favorite** editor.
+
+You will be able to perform the configure of `CMake` project simply by pressing a button, as well as compile your project or maybe run your tests thanks to the help of `CTest`.
+
+You will also be able to debug your tests, and even your applications, directly from NeoVim thanks to the help of `nvim-dap`, or perform the compilation of your code **automagically** when you save your changes!
+
+**So what are you waiting for? Install it and enjoy!**
 
 ## Requirements
 
@@ -17,6 +26,7 @@ This plugin requires:
 - [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) for debugging targets and tests
 - [`treesitter`](https://github.com/nvim-treesitter/nvim-treesitter) for tests source code analysis
 - [`telescope`](https://github.com/nvim-telescope/telescope.nvim) used for UI selections
+- [`plenary`](https://github.com/nvim-lua/plenary.nvim) used for popup window and unit tests
 
 You also must have `cmake` and `ctest` installed on your local machine
 
@@ -60,7 +70,8 @@ You can use your preferred package manager, the following example is based on [`
       { '<leader>mL',  '<cmd>CMakeToogleCommandLog<cr>',     desc = "Toogle command log window" },
       { '<leader>mr',  '<cmd>CMakeRun<cr>',                  desc = "Execute target" },
       { '<leader>md',  '<cmd>CMakeDebug<cr>',                desc = "Execute target in debug" },
-      { '<leader>mT',  '<cmd>CRunTestCases<cr>',             desc = "Execute all tests" }
+      { '<leader>mT',  '<cmd>CRunTestCases<cr>',             desc = "Execute all tests" },
+      { '<leader>ms',  '<cmd>CMakeSettings<cr>',             desc = "Change CMakeSimple settings" }
     }
 }
 ```
