@@ -2,14 +2,14 @@ local window = require('cmake-simple.lib.window')
 local utils = require('cmake-simple.lib.utils')
 local ntf = require('cmake-simple.lib.notification')
 
-local M = {config_buf = nil, config_win = nil, border_win = nil, callback = nil}
+local M = {config_buf = nil, config_win = nil, callback = nil}
 
 M._close = function()
-  if M.config_buf ~= nil and vim.api.nvim_buf_is_valid(M.config_buf) then vim.api.nvim_buf_delete(M.config_buf, {}) end
+  if M.config_buf ~= nil and vim.api.nvim_buf_is_valid(M.config_buf) then
+    vim.api.nvim_buf_delete(M.config_buf, {force = true})
+  end
   if M.config_win ~= nil and vim.api.nvim_win_is_valid(M.config_win) then vim.api.nvim_win_close(M.config_win, true) end
-  if M.border_win ~= nil and vim.api.nvim_win_is_valid(M.border_win) then vim.api.nvim_win_close(M.border_win, true) end
 
-  M.border_win = nil
   M.config_win = nil
   M.config_buf = nil
 end
@@ -28,6 +28,8 @@ M._on_save = function()
 
   M._close()
 
+  ntf.notify("Configuration saved", vim.log.levels.INFO)
+
   M.callback(opts())
 end
 
@@ -36,16 +38,18 @@ local function _show_config(current, callback)
 
   local current_content = utils.split(vim.inspect(current), "\n")
 
-  local win_opt
-  M.config_buf, M.config_win, win_opt = window.popup("CMakeSimple local config")
-  M.border_win = win_opt.border.win_id
+  M.config_buf, M.config_win = window.popup("CMakeSimple local config")
 
   vim.api.nvim_buf_set_name(M.config_buf, "cmakesimple-config")
-  vim.api.nvim_set_option_value("filetype", "CMakeSimple", {buf = M.config_buf})
+  vim.api.nvim_set_option_value("filetype", "cmakesimple", {buf = M.config_buf})
   vim.api.nvim_set_option_value("buftype", "acwrite", {buf = M.config_buf})
   vim.api.nvim_set_option_value("bufhidden", "delete", {buf = M.config_buf})
 
-  vim.api.nvim_create_autocmd("BufWriteCmd", {buffer = M.config_buf, callback = M._on_save})
+  vim.api.nvim_create_autocmd("BufWriteCmd", {
+    buffer = M.config_buf,
+    callback = function() vim.schedule(function() M._on_save() end) end
+  })
+  vim.api.nvim_create_autocmd("BufLeave", {buffer = M.config_buf, callback = M._close})
   vim.cmd(string.format("autocmd BufModifiedSet <buffer=%s> set nomodified", M.config_buf))
 
   vim.api.nvim_buf_set_lines(M.config_buf, 0, #current_content, false, current_content)

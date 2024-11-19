@@ -26,7 +26,7 @@ This plugin requires:
 - [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) for debugging targets and tests
 - [`treesitter`](https://github.com/nvim-treesitter/nvim-treesitter) for tests source code analysis
 - [`telescope`](https://github.com/nvim-telescope/telescope.nvim) used for UI selections
-- [`plenary`](https://github.com/nvim-lua/plenary.nvim) used for popup window and unit tests
+- [`plenary`](https://github.com/nvim-lua/plenary.nvim) used also for unit tests
 
 You also must have `cmake` and `ctest` installed on your local machine
 

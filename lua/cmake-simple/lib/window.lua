@@ -1,5 +1,3 @@
-local popup = require("plenary.popup")
-
 local M = {
   centered_window = function()
     local buf = vim.api.nvim_create_buf(false, true)
@@ -53,17 +51,19 @@ local M = {
   popup = function(title, width, height)
     width = width or 50
     height = height or 12
-    local buf = vim.api.nvim_create_buf(false, false)
+    local buf = vim.api.nvim_create_buf(false, true)
 
-    local win, win_opt = popup.create(buf, {
+    local win = vim.api.nvim_open_win(buf, true, {
+      style = "minimal",
+      relative = "editor",
+      border = "rounded",
       title = title,
-      line = math.floor(((vim.o.lines - height) / 2) - 1),
+      row = math.floor(((vim.o.lines - height) / 2) - 1),
       col = math.floor((vim.o.columns - width) / 2),
-      minwidth = width,
-      minheight = height,
-      borderchars = {"─", "│", "─", "│", "╭", "╮", "╯", "╰"}
+      width = width,
+      height = height
     })
-    return buf, win, win_opt
+    return buf, win
   end
 }
 
