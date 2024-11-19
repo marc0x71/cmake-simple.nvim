@@ -33,6 +33,7 @@ end
 
 function ctest:load_presets()
   self.presets = {}
+  self.selected_preset = nil
   local cmd = {"ctest", "--list-presets"}
   local result = vim.system(cmd, {text = true}):wait()
 
@@ -206,6 +207,8 @@ function ctest:test_log(name, detail)
     return
   end
   local buf, _ = window.centered_window()
+  vim.api.nvim_set_option_value("readonly", false, {buf = buf})
+  vim.api.nvim_set_option_value("modifiable", true, {buf = buf})
 
   -- press 'q' or 'esc' to close window
   for _, key in ipairs({'q', '<esc>'}) do

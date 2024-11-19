@@ -91,23 +91,23 @@ local M = {
       prompt_title = title,
       finder = finders.new_table({results = list}),
       layout_config = {
-          width = function(_, max_columns)
-            local percentage = 0.5
-            local max = 50
-            return math.min(math.floor(percentage * max_columns), max)
-          end,
-          height = function(_, _, max_lines)
-            local percentage = 0.3
-            local min = 15
-            return math.max(math.floor(percentage * max_lines), min)
-          end
+        width = function(_, max_columns)
+          local percentage = 0.5
+          local max = 50
+          return math.min(math.floor(percentage * max_columns), max)
+        end,
+        height = function(_, _, max_lines)
+          local percentage = 0.3
+          local min = 15
+          return math.max(math.floor(percentage * max_lines), min)
+        end
       },
       sorter = conf.generic_sorter(opts),
       attach_mappings = function(prompt_bufnr, _)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
           local selection = action_state.get_selected_entry()
-          callback(selection[1])
+          if selection ~= nil then callback(selection[1]) end
         end)
         return true
       end

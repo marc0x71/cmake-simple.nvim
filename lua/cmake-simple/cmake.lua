@@ -29,6 +29,7 @@ end
 
 ---Load CMake preset list
 function cmake:load_presets()
+  self.selected_preset = {configure = nil, build = nil, test = nil}
   for _, preset_type in pairs({"configure", "build", "test"}) do
     local cmd = {"cmake", "--list-presets=" .. preset_type}
     local result = vim.system(cmd, {text = true}):wait()
