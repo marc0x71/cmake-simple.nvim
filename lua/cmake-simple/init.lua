@@ -128,7 +128,10 @@ M.debug_target = function() return require("cmake-simple.app").get():debug_targe
 M.settings = function()
   local current_opts = require('cmake-simple.app').get().opts.inner
   local cfg = require("cmake-simple.lib.config")
-  cfg.show_config(current_opts, function(opts) require("cmake-simple.app").get():update(opts) end)
+  cfg.show_config(current_opts, function(opts)
+    notification.notify("Configuration updated", vim.log.levels.INFO)
+    require("cmake-simple.app").get():update(opts)
+  end)
 end
 
 _init_commands()

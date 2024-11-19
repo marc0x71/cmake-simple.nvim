@@ -116,7 +116,7 @@ function ctest:search_test_folders()
   self.test_dir = nil
 
   ---@diagnostic disable-next-line: undefined-field
-  local cwd = vim.loop.cwd()
+  local cwd = vim.uv.cwd()
   local folders = scandir.scan_dir(cwd, {
     respect_gitignore = false,
     depth = 4,

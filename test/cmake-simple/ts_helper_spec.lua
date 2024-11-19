@@ -1,6 +1,6 @@
 local module = require("cmake-simple.lib.ts_helper")
 
-local resources_path = vim.loop.cwd() .. "/test/resources/"
+local resources_path = vim.uv.cwd() .. "/test/resources/"
 
 describe("Extract test details from source file", function()
   it("works with basic GTest file", function()

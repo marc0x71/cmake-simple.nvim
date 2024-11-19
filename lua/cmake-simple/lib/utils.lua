@@ -29,7 +29,10 @@ local M = {
   create_file = function(name, content)
     content = content or ''
     local f = io.open(name, "w")
-    if not f then return false end
+    if not f then
+      print("unexpected error creating ", name)
+      return false
+    end
     f:write(content)
     f:close()
     return true
