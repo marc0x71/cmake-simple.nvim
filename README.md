@@ -57,9 +57,10 @@ You can use your preferred package manager, the following example is based on [`
       { '<leader>mC',  '<cmd>CMakeClean<cr>',                desc = "Clean project" },
       { '<leader>ml',  '<cmd>CMakeLog<cr>',                  desc = "Show last log" },
       { '<leader>mt',  '<cmd>CTestCases<cr>',                desc = "Show tests" },
-      { '<leader>mL',  '<cmd>CMakeToogleCommandLog<cr>',     desc = "Toogle command log window" }
-      { '<leader>mr',  '<cmd>CMakeRun<cr>',                  desc = "Execute target"},
-      { '<leader>md',  '<cmd>CMakeDebug<cr>',                desc = "Execute target in debug"}
+      { '<leader>mL',  '<cmd>CMakeToogleCommandLog<cr>',     desc = "Toogle command log window" },
+      { '<leader>mr',  '<cmd>CMakeRun<cr>',                  desc = "Execute target" },
+      { '<leader>md',  '<cmd>CMakeDebug<cr>',                desc = "Execute target in debug" },
+      { '<leader>mT',  '<cmd>CRunTestCases<cr>',             desc = "Execute all tests" }
     }
 }
 ```

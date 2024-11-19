@@ -59,11 +59,11 @@ function ctest:get_preset(callback)
   end
 end
 
-function ctest:_load_json_testcases(cmd)
+function ctest:_load_json_testcases(cmd, callback)
   local result = vim.system(cmd, {text = true}):wait()
   if result.code == 0 then
     local json = vim.json.decode(result.stdout)
-    if self.test_cases:load_testlist(json) then self:search_test_files() end
+    if self.test_cases:load_testlist(json) then self:search_test_files(callback) end
   end
   if result.code ~= 0 or not self.test_cases:has_tests() then
     ntf.notify("Failed to retrieve test list", vim.log.levels.ERROR)
@@ -71,7 +71,7 @@ function ctest:_load_json_testcases(cmd)
   end
 end
 
-function ctest:testcases()
+function ctest:testcases(callback)
   self:search_test_folders()
   if self.test_dir == nil or next(self.test_folders) == nil then
     -- something went wrong
@@ -82,15 +82,15 @@ function ctest:testcases()
   if next(self.preset_list) ~= nil then
     self:get_preset(function(select)
       vim.list_extend(cmd, {'--preset', select})
-      self:_load_json_testcases(cmd)
+      self:_load_json_testcases(cmd, callback)
     end)
   else
-    self:_load_json_testcases(cmd)
+    self:_load_json_testcases(cmd, callback)
   end
 
 end
 
-function ctest:search_test_files()
+function ctest:search_test_files(callback)
   local files = {}
   local count = vim.tbl_count(self.test_folders)
   for _, folder in ipairs(self.test_folders) do
@@ -105,7 +105,7 @@ function ctest:search_test_files()
       on_exit = function()
         count = count - 1
         for k, v in pairs(files) do self.test_cases:update_test(k, v) end
-        if count <= 0 then vim.schedule(function() self:update_testcases() end) end
+        if count <= 0 then vim.schedule(function() self:update_testcases(callback) end) end
       end
     })
   end
@@ -343,7 +343,7 @@ function ctest:_create_win_testcases()
   return self.testcases_buf
 end
 
-function ctest:update_testcases()
+function ctest:update_testcases(callback)
   self:_create_win_testcases()
 
   vim.api.nvim_set_option_value("readonly", false, {buf = self.testcases_buf})
@@ -386,6 +386,8 @@ function ctest:update_testcases()
 
   vim.api.nvim_set_option_value("readonly", true, {buf = self.testcases_buf})
   vim.api.nvim_set_option_value("modifiable", false, {buf = self.testcases_buf})
+
+  if callback ~= nil then callback() end
 end
 
 function ctest:update_results(result_filename)

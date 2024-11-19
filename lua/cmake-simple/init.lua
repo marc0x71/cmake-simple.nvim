@@ -70,6 +70,12 @@ local function _init_commands()
     bang = true,
     desc = "CTest show testcases"
   })
+
+  vim.api.nvim_create_user_command("CRunTestCases", function() require('cmake-simple').run_testcases() end, { -- opts
+    nargs = "*",
+    bang = true,
+    desc = "Run all CTest testcases"
+  })
 end
 
 local M = {}
@@ -97,6 +103,8 @@ M.toogle_command_log = function()
 end
 
 M.testcases = function() require("cmake-simple.app").get():testcases() end
+
+M.run_testcases = function() require("cmake-simple.app").get():run_testcases() end
 
 M.check_auto_build = function() require("cmake-simple.app").get():check_auto_build() end
 
