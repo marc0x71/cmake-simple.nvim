@@ -143,7 +143,7 @@ function cmake:build()
     vim.fn.mkdir(self.opts:get().build_folder, "p")
   end
 
-  local args = {"--build", self.opts:get().build_folder}
+  local args = {"--build", self.opts:get().build_folder, "--config", self.opts:get().config_type}
   if self.opts:get().clean_first then args = vim.list_extend(args, {'--clean-first'}) end
   if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
   self.running = true
@@ -241,5 +241,12 @@ function cmake:run_target()
   end)
 end
 
+function cmake:select_conf_type()
+  utils.select_from_list("Select configuration type", {"Debug", "Release", "RelWithDebInfo", "MinSizeRel"},
+                         function(name)
+    if name == nil then return end
+    self.opts.inner.config_type = name
+  end)
+end
 return cmake
 

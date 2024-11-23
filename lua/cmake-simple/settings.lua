@@ -1,5 +1,6 @@
 local default_settings = {
   build_folder = "build",
+  config_type = "Debug",
   jobs = 2,
   dap_adapter = "gdb",
   clean_first = false,

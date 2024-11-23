@@ -64,7 +64,7 @@ end
 
 function M:build_status()
   if _cmakefiles_exists(true) then
-    return self.cmake_instance.build_status
+    return "  󰙄 " .. self.cmake_instance.opts.inner.config_type .. "    Build " .. self.cmake_instance.build_status
   else
     return ""
   end
@@ -75,6 +75,8 @@ function M:build_status_available() return _cmakefiles_exists(true) end
 function M:run_target() if _cmakefiles_exists() then self.cmake_instance:run_target() end end
 
 function M:debug_target() if _cmakefiles_exists() then self.cmake_instance:debug_target() end end
+
+function M:select_conf_type() if _cmakefiles_exists() then self.cmake_instance:select_conf_type() end end
 
 return M
 

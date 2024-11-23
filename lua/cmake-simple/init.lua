@@ -82,6 +82,12 @@ local function _init_commands()
     bang = true,
     desc = "Change CMakeSimple settings"
   })
+
+  vim.api.nvim_create_user_command("CMakeSelectConfType", function() require('cmake-simple').select_conf_type() end, { -- opts
+    nargs = "*",
+    bang = true,
+    desc = "Select CMake configuration type"
+  })
 end
 
 local M = {}
@@ -117,7 +123,7 @@ M.run_testcases = function() require("cmake-simple.app").get():run_testcases() e
 
 M.check_auto_build = function() require("cmake-simple.app").get():check_auto_build() end
 
-M.build_status = function() return "CMake " .. require("cmake-simple.app").get():build_status() end
+M.build_status = function() return require("cmake-simple.app").get():build_status() end
 
 M.build_status_available = function() return require("cmake-simple.app").get():build_status_available() end
 
@@ -133,6 +139,8 @@ M.settings = function()
     require("cmake-simple.app").get():update(opts)
   end)
 end
+
+M.select_conf_type = function() return require("cmake-simple.app").get():select_conf_type() end
 
 _init_commands()
 

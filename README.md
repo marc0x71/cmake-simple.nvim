@@ -71,7 +71,8 @@ You can use your preferred package manager, the following example is based on [`
       { '<leader>mr',  '<cmd>CMakeRun<cr>',                  desc = "Execute target" },
       { '<leader>md',  '<cmd>CMakeDebug<cr>',                desc = "Execute target in debug" },
       { '<leader>mT',  '<cmd>CRunTestCases<cr>',             desc = "Execute all tests" },
-      { '<leader>ms',  '<cmd>CMakeSettings<cr>',             desc = "Change CMakeSimple settings" }
+      { '<leader>ms',  '<cmd>CMakeSettings<cr>',             desc = "Change CMakeSimple settings" },
+      { '<leader>mS',  '<cmd>CMakeSelectConfType<cr>',       desc = "Select CMake configuration type" }
     }
 }
 ```
@@ -110,6 +111,11 @@ You can overwrite using `setup` function or via `opts` if you are using [`lazy.n
 |CMakeLog|Show last execution log|
 |CTestCases|Show found test cases (show next paragraph for available shortcuts)|
 |CMakeToogleCommandLog|Hide/Show log windows when `cmake` command is executed |
+|CRunTestCases|Run all CTest test cases|
+|CMakeRun|Run target|
+|CMakeDebug|Run target in debug (using DAP)|
+|CMakeSettings|Change CMakeSimple setting for current project|
+|CMakeSelectConfType|Select CMake configuration type|
 
 ## CTest
 
