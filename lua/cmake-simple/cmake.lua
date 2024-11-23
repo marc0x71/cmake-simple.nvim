@@ -30,6 +30,7 @@ end
 ---Load CMake preset list
 function cmake:load_presets()
   self.selected_preset = {configure = nil, build = nil, test = nil}
+  self.preset_list = {configure = {}, build = {}, test = {}}
   for _, preset_type in pairs({"configure", "build", "test"}) do
     local cmd = {"cmake", "--list-presets=" .. preset_type}
     local result = vim.system(cmd, {text = true}):wait()
@@ -92,7 +93,7 @@ function cmake:configure_from_preset(silent_mode)
     silent_mode = silent_mode
   })
   self:get_preset("configure", function(preset_name)
-    local args = {"--preset", preset_name}
+    local args = {"--preset", preset_name, "-DCMAKE_BUILD_TYPE=" .. self.opts:get().config_type}
     self.running = true
     cmd:execute(args, "Configure using preset " .. preset_name,
                 function(status) self:_on_command_exit(status, true); end)
@@ -114,7 +115,9 @@ function cmake:configure(silent_mode)
     show_command_logs = self.opts:get().show_command_logs,
     silent_mode = silent_mode
   })
-  local args = {"-S", self.cwd, "-B", self.opts:get().build_folder}
+  local args = {
+    "-S", self.cwd, "-B", self.opts:get().build_folder, "-DCMAKE_BUILD_TYPE=" .. self.opts:get().config_type
+  }
   self.running = true
   cmd:execute(args, "Configure", function(status) self:_on_command_exit(status, true) end)
 end
@@ -122,7 +125,7 @@ end
 function cmake:build_from_preset()
   local cmd = command:new({log_filename = self.log_filename, show_command_logs = self.opts:get().show_command_logs})
   self:get_preset("build", function(preset_name)
-    local args = {"--build", "--preset", preset_name}
+    local args = {"--build", "--preset", preset_name, "--config", self.opts:get().config_type}
     if self.opts:get().clean_first then args = vim.list_extend(args, {'--clean-first'}) end
     if self.opts:get().jobs > 1 then args = vim.list_extend(args, {'-j', tostring(self.opts:get().jobs)}) end
     self.running = true

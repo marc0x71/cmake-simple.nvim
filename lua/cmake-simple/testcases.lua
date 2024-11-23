@@ -41,6 +41,10 @@ end
 function testcases:update_results(xml)
   self:_update_summary(xml[1]["attrs"])
   local missing = {}
+  if xml[1]["children"] == nil then
+    for k, _ in pairs(self.test_list) do table.insert(missing, k) end
+    return missing
+  end
   for _, testcase in pairs(xml[1]["children"]) do
     local name = testcase["attrs"]["name"]
     ---@diagnostic disable-next-line: unused-local
