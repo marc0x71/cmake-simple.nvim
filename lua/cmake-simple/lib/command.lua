@@ -2,6 +2,7 @@ local uv = vim.uv
 local windows_listener = require('cmake-simple.lib.listener.window_listener')
 local notification_listener = require('cmake-simple.lib.listener.notification_listener')
 local writer_listener = require('cmake-simple.lib.listener.writer_listener')
+local quickfix_listener = require('cmake-simple.lib.listener.quickfix_listener')
 
 local command = {}
 
@@ -43,7 +44,7 @@ function command:_execute_task(args, on_progress, on_complete)
 end
 
 function command:execute(args, action, on_terminate)
-  local listeners = {writer_listener:new(self.log_filename)}
+  local listeners = {writer_listener:new(self.log_filename), quickfix_listener:new()}
   if not self.silent_mode then vim.list_extend(listeners, {notification_listener:new(action)}) end
   if self.show_log_window then vim.list_extend(listeners, {windows_listener:new(action)}) end
 
